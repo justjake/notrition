@@ -53,7 +53,7 @@ export function Button(props: ButtonHTMLAttributes<HTMLButtonElement>) {
 
 export function useCurrentUserProfile() {
 	const { user } = Auth.useUser()
-	const dbProfile = useSWR(user?.id, async id => {
+	const dbProfile = useSWR(`user:${user?.id}`, async id => {
 		if (!id) {
 			return
 		}
