@@ -15,7 +15,7 @@ const extractTextContent = (blockContent: any): string | undefined => {
 const getNutritionInfo = async () => {
 	const response = await fetch(`${apiBaseUrl}blocks/${pageId}/children`, {
 		method: "GET",
-		headers: { Authorization: "Bearer " + NOTION_API_TOKEN },
+		headers: { Authorization: "Bearer " + process.env.NOTION_API_TOKEN },
 	})
 	const bodyJson = await response.json()
 	if (bodyJson["object"] !== "list") {
@@ -58,7 +58,7 @@ const getNutritionInfo = async () => {
 	}
 
 	const edamamResponse = await fetch(
-		`${edamamBaseUrl}?app_id=${EDAMAM_APP_ID}&app_key=${EDAMAM_API_TOKEN}`,
+		`${edamamBaseUrl}?app_id=${process.env.EDAMAM_APP_ID}&app_key=${process.env.EDAMAM_API_TOKEN}`,
 		{
 			method: "POST",
 			body: JSON.stringify(nutritionRequest),
