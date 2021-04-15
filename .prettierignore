@@ -1,0 +1,8 @@
+/.prettierignore
+*.tf
+*.conf
+*.config
+/src/cli/notion
+*.dockerfile
+.next
+node_modules
