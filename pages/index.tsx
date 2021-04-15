@@ -12,6 +12,7 @@ import React, {
 } from "react"
 import { Profile } from "../lib/models"
 import { UserLogin } from "../components/UserSettings"
+import { NotionRecipeExtractor } from "../components/NotionRecipeExtractor"
 
 function Emojis(props: {}) {
 	return (
@@ -46,6 +47,8 @@ export default function Home() {
 				</p>
 
 				<UserLogin />
+
+				<NotionRecipeExtractor />
 			</main>
 
 			<footer className={styles.footer}>

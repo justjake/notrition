@@ -1,3 +1,5 @@
+import { supabase } from "./supabase"
+
 export type UUID = string
 export type JSONB = string // does it SERDE this for us? unsure.
 

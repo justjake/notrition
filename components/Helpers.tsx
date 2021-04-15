@@ -1,4 +1,8 @@
+import { Auth } from "@supabase/ui"
 import { ButtonHTMLAttributes, HTMLProps } from "react"
+import useSWR from "swr"
+import { Profile } from "../lib/models"
+import { supabase } from "../lib/supabase"
 
 export const fonts = {
 	default: `-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif`,
@@ -45,4 +49,27 @@ export function Button(props: ButtonHTMLAttributes<HTMLButtonElement>) {
 			`}</style>
 		</>
 	)
+}
+
+export function useCurrentUserProfile() {
+	const { user } = Auth.useUser()
+	const dbProfile = useSWR(user?.id, async id => {
+		if (!id) {
+			return
+		}
+
+		const stuff = await supabase
+			.from<Profile>("profiles")
+			.select("id, human_name, notion_api_key")
+			.eq("id", id)
+			.single()
+
+		return stuff
+	})
+
+	return {
+		swr: dbProfile,
+		user,
+		profile: dbProfile?.data?.body,
+	}
 }
