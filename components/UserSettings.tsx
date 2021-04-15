@@ -98,7 +98,7 @@ export function UserLogin(props: {}) {
 								type="text"
 								name="human_name"
 								onChange={handleFormChange}
-								value={uiProfile?.human_name || ""}
+								defaultValue={uiProfile?.human_name || ""}
 								placeholder="Dr. Omlette"
 							/>
 						</label>
@@ -110,7 +110,7 @@ export function UserLogin(props: {}) {
 								type="text"
 								name="notion_api_key"
 								onChange={handleFormChange}
-								value={uiProfile?.notion_api_key || ""}
+								defaultValue={uiProfile?.notion_api_key || ""}
 								placeholder="secret_foobar..."
 							/>
 						</label>
