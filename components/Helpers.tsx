@@ -1,8 +1,12 @@
 import { Auth } from "@supabase/ui"
 import { ButtonHTMLAttributes, HTMLProps } from "react"
-import useSWR from "swr"
+import useSWR, { SWRResponse } from "swr"
 import { Profile } from "../lib/models"
 import { supabase } from "../lib/supabase"
+
+export const boxShadow = {
+	border: `inset 0px 0px 0px 1px rgba(0, 0, 0, 0.1)`,
+}
 
 export const fonts = {
 	default: `-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif`,
@@ -51,17 +55,19 @@ export function Button(props: ButtonHTMLAttributes<HTMLButtonElement>) {
 	)
 }
 
+export type CurrentUserProfile = ReturnType<typeof useCurrentUserProfile>
+
 export function useCurrentUserProfile() {
 	const { user } = Auth.useUser()
-	const dbProfile = useSWR(`user:${user?.id}`, async id => {
-		if (!id) {
+	const dbProfile = useSWR(`user:${user?.id}`, async () => {
+		if (!user) {
 			return
 		}
 
 		const stuff = await supabase
 			.from<Profile>("profiles")
 			.select("id, human_name, notion_api_key")
-			.eq("id", id)
+			.eq("id", user.id)
 			.single()
 
 		return stuff
