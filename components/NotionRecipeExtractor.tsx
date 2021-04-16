@@ -397,13 +397,16 @@ export function CreateNotionRecipePage(props: {}) {
 		<Row>
 			<Box>
 				<Row>
-					<input
-						disabled={saving}
-						type="text"
-						placeholder="Page URL or ID"
-						value={notionPageId}
-						onChange={e => setNotionPageId((e.target as any).value)}
-					/>
+					<label>
+						Page URL or ID
+						<input
+							disabled={saving}
+							type="text"
+							placeholder="https://www.notion.so/my-cool-recipe-241deadbeef"
+							value={notionPageId}
+							onChange={e => setNotionPageId((e.target as any).value)}
+						/>
+					</label>
 				</Row>
 				<Row>
 					<Button disabled={saving} onClick={handleSave}>
@@ -414,6 +417,23 @@ export function CreateNotionRecipePage(props: {}) {
 					{status}
 					<JSONViewer json={result} />
 				</Row>
+				<style jsx>
+					{`
+						label {
+							font-size: 14px;
+						}
+
+						input[type="text"] {
+							margin: 0px 1rem;
+						}
+
+						form {
+							box-shadow: inset 0px 0px 0px 1px rgba(0, 0, 0, 0.1);
+							border-radius: 3px;
+							padding: 0.5rem 1rem;
+						}
+					`}
+				</style>
 			</Box>
 		</Row>
 	)
