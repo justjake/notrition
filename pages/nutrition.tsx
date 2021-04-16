@@ -43,7 +43,7 @@ export default function Nutrition() {
 			}
 		}
 		getUserId()
-	}, [router.isReady, useCurrentUserProfile()?.profile])
+	}, [router.isReady, profile])
 
 	if (!router.query.pageId) {
 		return <div>No page ID found.</div>
