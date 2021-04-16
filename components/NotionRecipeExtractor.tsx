@@ -11,49 +11,15 @@ import {
 } from "../lib/notion"
 import { supabase } from "../lib/supabase"
 import {
+	Box,
 	boxShadow,
 	Button,
 	CurrentUserProfile,
+	JSONViewer,
 	Row,
 	useCurrentUserProfile,
 	useNotionApiClient,
 } from "./Helpers"
-
-function JSONViewer(props: { json?: any; jsonString?: string | null }) {
-	const { json, jsonString } = props
-	const formatted = useMemo(() => {
-		let value = json
-
-		if (jsonString) {
-			value = JSON.parse(jsonString)
-		}
-
-		return JSON.stringify(value, undefined, "  ")
-	}, [json, jsonString])
-	return (
-		<code>
-			<pre style={{ maxWidth: "90vw", maxHeight: "50vh", overflow: "scroll" }}>
-				{formatted}
-			</pre>
-		</code>
-	)
-}
-
-function Box(props: { children: ReactNode }) {
-	return (
-		<>
-			<div className="box">{props.children}</div>
-			<style jsx>{`
-				.box {
-					font-size: 0.875rem
-					border-radius: 3px;
-					padding: 0.5rem 1rem;
-					box-shadow: ${boxShadow.border};
-				}
-			`}</style>
-		</>
-	)
-}
 
 export function NotionRecipePageList(props: {}) {
 	const profile = useCurrentUserProfile()?.profile
@@ -131,34 +97,36 @@ export function NotionRecipePageView(props: {
 	const withoutDashes = recipePage.notion_page_id.replace(/-/g, "")
 
 	return (
-		<Box>
-			<Row>
-				<a href={`https://www.notion.so/${withoutDashes}`} target="_blank">
-					Visit Notion page {recipePage.notion_page_id}
-				</a>
-			</Row>
-			<Row>
-				<Button onClick={handleRefresh}>Refresh</Button>
-			</Row>
-			<Row>
-				<Row>Notion data</Row>
-				<Box>
-					<JSONViewer jsonString={recipePage.notion_data} />
-				</Box>
-			</Row>
-			<Row>
-				<Row>Recipe data</Row>
-				<Box>
-					<JSONViewer jsonString={recipePage.recipe_data} />
-				</Box>
-			</Row>
-			<Row>
-				<Row>Extra data</Row>
-				<Box>
-					<JSONViewer jsonString={recipePage.extra_data} />
-				</Box>
-			</Row>
-		</Box>
+		<Row>
+			<Box>
+				<Row>
+					<a href={`https://www.notion.so/${withoutDashes}`} target="_blank">
+						Visit Notion page {recipePage.notion_page_id}
+					</a>
+				</Row>
+				<Row>
+					<Button onClick={handleRefresh}>Refresh</Button>
+				</Row>
+				<Row>
+					<Row>Notion data</Row>
+					<Box>
+						<JSONViewer jsonString={recipePage.notion_data} />
+					</Box>
+				</Row>
+				<Row>
+					<Row>Recipe data</Row>
+					<Box>
+						<JSONViewer jsonString={recipePage.recipe_data} />
+					</Box>
+				</Row>
+				<Row>
+					<Row>Extra data</Row>
+					<Box>
+						<JSONViewer jsonString={recipePage.extra_data} />
+					</Box>
+				</Row>
+			</Box>
+		</Row>
 	)
 }
 

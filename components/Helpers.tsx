@@ -5,6 +5,7 @@ import {
 	HTMLProps,
 	ReactNode,
 	useContext,
+	useMemo,
 } from "react"
 import useSWR, { SWRResponse } from "swr"
 import { Profile } from "../lib/models"
@@ -133,4 +134,40 @@ export function useNotionApiClient() {
 	if (apiKey) {
 		return NotionApiClient.create(apiKey)
 	}
+}
+
+export function JSONViewer(props: { json?: any; jsonString?: string | null }) {
+	const { json, jsonString } = props
+	const formatted = useMemo(() => {
+		let value = json
+
+		if (jsonString) {
+			value = JSON.parse(jsonString)
+		}
+
+		return JSON.stringify(value, undefined, "  ")
+	}, [json, jsonString])
+	return (
+		<code>
+			<pre style={{ maxWidth: "90vw", maxHeight: "50vh", overflow: "scroll" }}>
+				{formatted}
+			</pre>
+		</code>
+	)
+}
+
+export function Box(props: { children: ReactNode }) {
+	return (
+		<>
+			<div className="box">{props.children}</div>
+			<style jsx>{`
+				.box {
+					font-size: 0.875rem
+					border-radius: 3px;
+					padding: 0.5rem 1rem;
+					box-shadow: ${boxShadow.border};
+				}
+			`}</style>
+		</>
+	)
 }
