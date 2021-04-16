@@ -63,7 +63,49 @@ export interface NotionBlock extends NotionObject<"block"> {
 	}
 }
 
-export interface NotionPage extends NotionObject<"page"> {}
+export type NotionText = NotionTextToken[]
+
+export interface NotionTextToken {
+	type: string
+	text: {
+		content: string
+		link: string | null
+	}
+	annotations: {
+		[kind: string]: boolean
+	}
+	plain_text: string
+	href: string | null
+}
+
+export function getPlainText(text: NotionText): string {
+	return text.map(it => it.plain_text).join("")
+}
+
+export interface NotionProperty {
+	id: string
+	type: string
+	text?: NotionText
+	select?: {
+		id: string
+		name: string
+		color: string
+	}
+	title?: NotionText
+}
+
+export interface NotionPage extends NotionObject<"page"> {
+	archived: boolean
+	created_time: string
+	last_edited_time: string
+	parent: {
+		type: string
+		database_id?: string
+	}
+	properties?: {
+		[key: string]: NotionProperty
+	}
+}
 
 function isNotionError(
 	obj: NotionObject<string> | NotionError
@@ -89,7 +131,9 @@ function assertIsObjectType<OT extends string>(
 export class NotionApiResponse {
 	constructor(public httpResponse: Response) {}
 
-	async asObject<OT extends string>(object: OT): Promise<NotionObject<OT>> {
+	async asObject<OT extends string, T extends NotionObject<OT>>(
+		object: OT
+	): Promise<T> {
 		const json: NotionObject<string> = await this.httpResponse.json()
 
 		if (isNotionError(json)) {
@@ -101,7 +145,7 @@ export class NotionApiResponse {
 
 		assertIsObjectType(object, json)
 
-		return json as NotionObject<OT>
+		return json as T
 	}
 
 	async asList<T>(): Promise<NotionList<T>> {
@@ -138,7 +182,7 @@ export class NotionApiClient {
 		return new NotionApiResponse(httpResponse)
 	}
 
-	async getPage(pageId: string) {
+	async getPage(pageId: string): Promise<NotionPage> {
 		const res = await this.req({
 			method: "GET",
 			path: `/pages/${pageId}`,
