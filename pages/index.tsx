@@ -14,7 +14,6 @@ import { Profile } from "../lib/models"
 import { UserLogin } from "../components/UserSettings"
 import {
 	CreateNotionRecipePage,
-	NotionRecipeExtractor,
 	NotionRecipePageList,
 } from "../components/NotionRecipeExtractor"
 
