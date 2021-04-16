@@ -79,3 +79,10 @@ export function useCurrentUserProfile() {
 		profile: dbProfile?.data?.body,
 	}
 }
+
+function useNotionApiClient() {
+	const { profile } = useCurrentUserProfile()
+	if (profile && profile.notion_api_key) {
+		return NotionApiClient.create(profile.notion_api_key)
+	}
+}

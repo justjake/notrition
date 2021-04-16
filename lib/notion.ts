@@ -1,4 +1,5 @@
-import fetch from "node-fetch"
+import fetch, { Response } from "node-fetch"
+import { useCurrentUserProfile } from "../components/Helpers"
 
 const NOTION_API_BASE_URL = "https://api.notion.com/v1"
 
@@ -35,6 +36,127 @@ export async function notionApiRequest(args: NotionApiRequest) {
 					...args.headers,
 				},
 		  })
+}
+
+interface NotionApiList<T = any> {
+	object: "list"
+	results: T[]
+	next_cursor: string | null
+	has_more: boolean
+}
+
+interface NotionApiError {
+	object: "error"
+	code: string
+	message: string
+}
+
+interface NotionBlock extends NotionObject<"block"> {
+	id: string
+	created_time: string
+	last_edited_time: string
+	has_children: boolean
+	type: string
+	paragraph?: {
+		text?: any[]
+	}
+}
+
+interface NotionObject<ObjectType extends string> {
+	object: ObjectType
+	[key: string]: unknown
+}
+
+function isNotionError(
+	obj: NotionObject<string> | NotionApiError
+): obj is NotionApiError {
+	return obj.object === "error"
+}
+
+function assertIsObjectType<OT extends string>(
+	type: OT,
+	object: NotionObject<string>
+): asserts object is NotionObject<OT> {
+	if (object.object !== type) {
+		const error = new TypeError(
+			`Expected object:${type}, but got ${object.object} in ${JSON.stringify(
+				object
+			).slice(0, 30)}...`
+		)
+		Object.assign(error, object)
+		throw error
+	}
+}
+
+export class NotionApiResponse {
+	constructor(public httpResponse: Response) {}
+
+	async asObject<OT extends string>(object: OT): Promise<NotionObject<OT>> {
+		const json: NotionObject<string> = await this.httpResponse.json()
+
+		if (isNotionError(json)) {
+			const error = new Error(json.message)
+			Object.assign(error, json)
+			error.name = `NotionApiError[${json.code}]`
+			throw error
+		}
+
+		assertIsObjectType(object, json)
+
+		return json as NotionObject<OT>
+	}
+
+	async asList<T>(): Promise<NotionApiList<T>> {
+		return this.asObject("list") as any
+	}
+
+	async asListOf<OT extends string, T extends NotionObject<OT>>(
+		object: string
+	): Promise<NotionApiList<T>> {
+		const list = await this.asList<T>()
+		if (list.results.length === 0) {
+			return list
+		}
+
+		const firstResult = list.results[0]
+		assertIsObjectType(object, firstResult)
+		return list
+	}
+}
+
+export class NotionApiClient {
+	constructor(public apiKey: string) {}
+
+	static create(apiKey: string) {
+		return new this(apiKey)
+	}
+
+	async req(args: Omit<NotionApiRequest, "notionApiToken">) {
+		const httpResponse = await notionApiRequest({
+			...args,
+			notionApiToken: this.apiKey,
+		})
+
+		return new NotionApiResponse(httpResponse)
+	}
+
+	async getPage(pageId: string) {
+		const res = await this.req({
+			method: "GET",
+			path: `/pages/${pageId}`,
+		})
+
+		return res.asObject("page")
+	}
+
+	async getChildren(blockId: string) {
+		const res = await this.req({
+			method: "GET",
+			path: `/blocks/${blockId}/children`,
+		})
+
+		return res.asList<NotionBlock>()
+	}
 }
 
 const extractTextContent = (blockContent: any): string | undefined => {
