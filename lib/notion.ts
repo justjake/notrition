@@ -94,6 +94,122 @@ export interface NotionProperty {
 	title?: NotionText
 }
 
+export interface NotionBlockBase extends NotionObject<"block"> {
+	id: string
+	created_time: string
+	last_edited_time: string
+	has_children: boolean
+}
+
+interface TodoBlock extends NotionBlockBase {
+	type: "to_do"
+	to_do: {
+		text: NotionText
+		checked: boolean
+	}
+}
+
+interface Paragraph extends NotionBlockBase {
+	type: "paragraph"
+	paragraph: {
+		text: NotionText
+	}
+}
+
+/*
+      {
+        "object": "block",
+        "id": "5e9063aa-e259-4334-a6c2-e1c52cc1cc3a",
+        "created_time": "2020-09-12T23:28:00.000Z",
+        "last_edited_time": "2020-10-12T01:50:00.000Z",
+        "has_children": false,
+        "type": "to_do",
+        "to_do": {
+          "text": [
+            {
+              "type": "text",
+              "text": {
+                "content": "1/2 cup brown sugar",
+                "link": null
+              },
+              "annotations": {
+                "bold": false,
+                "italic": false,
+                "strikethrough": false,
+                "underline": false,
+                "code": false,
+                "color": "default"
+              },
+              "plain_text": "1/2 cup brown sugar",
+              "href": null
+            }
+          ],
+          "checked": false
+        }
+      },
+      {
+        "object": "block",
+        "id": "c615da69-81d0-4491-abea-22caa130a5fb",
+        "created_time": "2020-09-12T23:28:00.000Z",
+        "last_edited_time": "2020-10-12T01:50:00.000Z",
+        "has_children": false,
+        "type": "to_do",
+        "to_do": {
+          "text": [
+            {
+              "type": "text",
+              "text": {
+                "content": "1/2 cup melted butter or margarine",
+                "link": null
+              },
+              "annotations": {
+                "bold": false,
+                "italic": false,
+                "strikethrough": false,
+                "underline": false,
+                "code": false,
+                "color": "default"
+              },
+              "plain_text": "1/2 cup melted butter or margarine",
+              "href": null
+            }
+          ],
+          "checked": false
+        }
+      },
+      {
+        "object": "block",
+        "id": "aebac686-9cf7-482b-80d6-e7ed82bdd64c",
+        "created_time": "2020-09-12T23:28:00.000Z",
+        "last_edited_time": "2020-10-12T01:50:00.000Z",
+        "has_children": false,
+        "type": "to_do",
+        "to_do": {
+          "text": [
+            {
+              "type": "text",
+              "text": {
+                "content": "2 teaspoons grated lemon rind",
+                "link": null
+              },
+              "annotations": {
+                "bold": false,
+                "italic": false,
+                "strikethrough": false,
+                "underline": false,
+                "code": false,
+                "color": "default"
+              },
+              "plain_text": "2 teaspoons grated lemon rind",
+              "href": null
+            }
+          ],
+          "checked": false
+        }
+      },
+
+*/
+
 export interface NotionPage extends NotionObject<"page"> {
 	archived: boolean
 	created_time: string
