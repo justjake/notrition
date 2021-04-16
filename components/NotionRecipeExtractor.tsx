@@ -1,4 +1,4 @@
-import { Auth } from "@supabase/ui"
+import { Alert, Auth } from "@supabase/ui"
 import { Response } from "node-fetch"
 import React, { ReactNode, useMemo, useState } from "react"
 import useSWR, { SWRResponse } from "swr"
@@ -108,6 +108,11 @@ export function NotionRecipePageView(props: {
 			notionApiToken: profile.notion_api_key,
 		})
 
+		const newPageJson = JSON.stringify(pageData)
+		if (newPageJson === recipePage.notion_data) {
+			throw "No changes"
+		}
+
 		const res = await supabase
 			.from<NotionRecipePage>("notion_recipe_page")
 			.update({
@@ -175,7 +180,7 @@ async function getBlockData(args: { pageId: string; notionApiToken: string }) {
 
 export function CreateNotionRecipePage(props: {}) {
 	const { profile } = useCurrentUserProfile()
-	const [notionPageId, setNotionPageId] = useState<string>()
+	const [notionPageId, setNotionPageId] = useState("")
 	const [saving, setSaving] = useState(false)
 	const [result, setResult] = useState<any>()
 
@@ -195,9 +200,10 @@ export function CreateNotionRecipePage(props: {}) {
 			}
 
 			const pageData = await getBlockData({
-				pageId: profile.notion_api_key,
+				pageId: notionPageId,
 				notionApiToken: profile.notion_api_key,
 			})
+
 			console.log("page data", pageData)
 
 			// Page data was ok.
