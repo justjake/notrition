@@ -28,8 +28,6 @@ export function UserLogin(props: {}) {
 					[(e.target as any).name]: (e.target as any).value,
 				}
 
-				console.log("update profile event", e, newProfile)
-
 				return newProfile
 			})
 		},

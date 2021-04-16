@@ -1,5 +1,4 @@
 import fetch, { Response } from "node-fetch"
-import { useCurrentUserProfile } from "../components/Helpers"
 
 const NOTION_API_BASE_URL = "https://api.notion.com/v1"
 
@@ -37,21 +36,23 @@ export async function notionApiRequest(args: NotionApiRequest) {
 				},
 		  })
 }
+export interface NotionObject<ObjectType extends string> {
+	object: ObjectType
+	[key: string]: unknown
+}
 
-interface NotionApiList<T = any> {
-	object: "list"
+export interface NotionList<T = any> extends NotionObject<"list"> {
 	results: T[]
 	next_cursor: string | null
 	has_more: boolean
 }
 
-interface NotionApiError {
-	object: "error"
+export interface NotionError extends NotionObject<"error"> {
 	code: string
 	message: string
 }
 
-interface NotionBlock extends NotionObject<"block"> {
+export interface NotionBlock extends NotionObject<"block"> {
 	id: string
 	created_time: string
 	last_edited_time: string
@@ -62,14 +63,11 @@ interface NotionBlock extends NotionObject<"block"> {
 	}
 }
 
-interface NotionObject<ObjectType extends string> {
-	object: ObjectType
-	[key: string]: unknown
-}
+export interface NotionPage extends NotionObject<"page"> {}
 
 function isNotionError(
-	obj: NotionObject<string> | NotionApiError
-): obj is NotionApiError {
+	obj: NotionObject<string> | NotionError
+): obj is NotionError {
 	return obj.object === "error"
 }
 
@@ -106,13 +104,13 @@ export class NotionApiResponse {
 		return json as NotionObject<OT>
 	}
 
-	async asList<T>(): Promise<NotionApiList<T>> {
+	async asList<T>(): Promise<NotionList<T>> {
 		return this.asObject("list") as any
 	}
 
 	async asListOf<OT extends string, T extends NotionObject<OT>>(
 		object: string
-	): Promise<NotionApiList<T>> {
+	): Promise<NotionList<T>> {
 		const list = await this.asList<T>()
 		if (list.results.length === 0) {
 			return list

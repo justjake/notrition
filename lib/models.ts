@@ -1,5 +1,9 @@
+import { NotionBlock, NotionList, NotionPage } from "./notion"
 import { supabase } from "./supabase"
 
+const EncodedType = Symbol("encoded type")
+
+type JsonOf<T> = JSONB & { [EncodedType]: T }
 export type UUID = string
 export type JSONB = string // does it SERDE this for us? unsure.
 
@@ -19,7 +23,22 @@ export interface Profile {
 export interface NotionRecipePage {
 	user_id: UUID
 	notion_page_id: UUID
-	notion_data: JSONB | null
+	notion_data: JsonOf<NotionPageData> | null
 	recipe_data: JSONB | null
 	extra_data: JSONB | null
+}
+
+export interface NotionPageData {
+	page: NotionPage
+	children: NotionList<NotionBlock>
+}
+
+export const safeJson = {
+	parse<T>(encodedString: JsonOf<T>): T {
+		return JSON.parse(encodedString)
+	},
+
+	stringify<T>(value: T, indent?: string): JsonOf<T> {
+		return JSON.stringify(value, undefined, indent) as JsonOf<T>
+	},
 }

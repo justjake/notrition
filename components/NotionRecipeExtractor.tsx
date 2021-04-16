@@ -2,9 +2,10 @@ import { Alert, Auth } from "@supabase/ui"
 import { Response } from "node-fetch"
 import React, { ReactNode, useMemo, useState } from "react"
 import useSWR, { SWRResponse } from "swr"
-import { NotionRecipePage, Profile } from "../lib/models"
+import { NotionRecipePage, Profile, safeJson } from "../lib/models"
 import {
 	getNotionPageIngredients,
+	NotionApiClient,
 	notionApiRequest,
 	parseNotionJson,
 } from "../lib/notion"
@@ -97,16 +98,17 @@ export function NotionRecipePageView(props: {
 	swr: SWRResponse<any, any>
 	recipePage: NotionRecipePage
 }) {
-	const { recipePage, profile, swr } = props
+	const notion = useNotionApiClient()
+	const { recipePage, swr } = props
 
 	async function handleRefresh() {
-		if (!profile.notion_api_key) {
+		if (!notion) {
 			throw "no api key"
 		}
 
 		const pageData = await getBlockData({
 			pageId: recipePage.notion_page_id,
-			notionApiToken: profile.notion_api_key,
+			notion,
 		})
 
 		const newPageJson = JSON.stringify(pageData)
@@ -117,7 +119,7 @@ export function NotionRecipePageView(props: {
 		const res = await supabase
 			.from<NotionRecipePage>("notion_recipe_page")
 			.update({
-				notion_data: JSON.stringify(pageData),
+				notion_data: safeJson.stringify(pageData),
 			})
 			.eq("notion_page_id", recipePage.notion_page_id)
 			.single()
@@ -160,22 +162,10 @@ export function NotionRecipePageView(props: {
 	)
 }
 
-async function getBlockData(args: { pageId: string; notionApiToken: string }) {
-	const { pageId, notionApiToken } = args
-	const notionRes = await notionApiRequest({
-		method: "GET",
-		path: `/blocks/${pageId}/children`,
-		notionApiToken,
-	})
-	const children = parseNotionJson(await notionRes.json())
-
-	const pageRes = await notionApiRequest({
-		method: "GET",
-		path: `/pages/${pageId}`,
-		notionApiToken,
-	})
-	const page = parseNotionJson(await pageRes.json())
-
+async function getBlockData(args: { pageId: string; notion: NotionApiClient }) {
+	const { pageId, notion } = args
+	const page = await notion.getPage(pageId)
+	const children = await notion.getChildren(pageId)
 	return { page, children }
 }
 
@@ -202,8 +192,8 @@ export function CreateNotionRecipePage(props: {}) {
 		setSaving(true)
 		try {
 			const pageData = await getBlockData({
+				notion,
 				pageId: notionPageId,
-				notionApiToken: notion.apiKey,
 			})
 
 			console.log("page data", pageData)
@@ -215,7 +205,7 @@ export function CreateNotionRecipePage(props: {}) {
 					{
 						notion_page_id: notionPageId,
 						user_id: profile.id,
-						notion_data: JSON.stringify(pageData),
+						notion_data: safeJson.stringify(pageData),
 					},
 				])
 
