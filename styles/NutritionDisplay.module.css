@@ -1,0 +1,59 @@
+.section {
+	border: 1px solid black;
+	margin: 20px;
+	width: 300px;
+	padding: 0.5rem;
+}
+.section > table {
+	border: collapse;
+}
+
+.header {
+	font-weight: bold;
+	font-size: 20px;
+	margin: 0 0 0.25rem 0;
+}
+
+.title {
+	border-bottom: 5px solid black;
+	padding: 0 0 0.25rem 0;
+	margin: 0 0 0.5rem 0;
+}
+.serving_size {
+	font-size: 15px;
+	font-weight: bold;
+	margin: 0;
+}
+.servings {
+	font-size: 12px;
+	margin: 0;
+	font-weight: normal;
+}
+.calories {
+	font-size: 30px;
+}
+.caloric_value {
+	text-align: right;
+}
+.table > tbody > tr {
+	font-weight: normal;
+	text-align: left;
+	padding: 0.25rem 0;
+	border-top: 1px solid black;
+	white-space: nowrap;
+}
+
+.sub {
+	font-weight: normal;
+	padding-left: 30px;
+}
+
+.table_grid {
+	margin: 0 0 0.5rem 0;
+}
+
+.table_grid > tbody > tr > td:last-child::before {
+	content: "•";
+	font-weight: bold;
+	margin: 0 10px 0 0;
+}
