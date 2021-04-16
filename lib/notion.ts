@@ -322,8 +322,7 @@ const extractTextContent = (blockContent: any): string | undefined => {
 		return
 	}
 	console.log(blockContent)
-	const text: string = blockContent.text[0].text.content
-	return text
+	return getPlainText(blockContent.text)
 }
 
 export const getIngredientsFromBlocks = (args: {
