@@ -429,7 +429,7 @@ export function CreateNotionRecipePage(props: {}) {
 				</Row>
 				<Row>
 					{status}
-					<JSONViewer json={result} />
+					{result && <JSONViewer json={result} />}
 				</Row>
 				<style jsx>
 					{`
