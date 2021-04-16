@@ -1,6 +1,6 @@
 import { Auth } from "@supabase/ui"
 import { Response } from "node-fetch"
-import React, { ReactNode, useState } from "react"
+import React, { ReactNode, useMemo, useState } from "react"
 import useSWR, { SWRResponse } from "swr"
 import { NotionRecipePage, Profile } from "../lib/models"
 import {
@@ -17,11 +17,22 @@ import {
 	useCurrentUserProfile,
 } from "./Helpers"
 
-function JSONViewer(props: { json: any }) {
-	const asString = JSON.stringify(props.json, undefined, "  ") || "undefined"
+function JSONViewer(props: { json?: any; jsonString?: string | null }) {
+	const { json, jsonString } = props
+	const formatted = useMemo(() => {
+		let value = json
+
+		if (jsonString) {
+			value = JSON.parse(jsonString)
+		}
+
+		return JSON.stringify(value, undefined, "  ")
+	}, [json, jsonString])
 	return (
 		<code>
-			<pre>{asString}</pre>
+			<pre style={{ maxWidth: "90vw", maxHeight: "50vh", overflow: "scroll" }}>
+				{formatted}
+			</pre>
 		</code>
 	)
 }
@@ -32,6 +43,7 @@ function Box(props: { children: ReactNode }) {
 			<div className="box">{props.children}</div>
 			<style jsx>{`
 				.box {
+					font-size: 0.875rem
 					border-radius: 3px;
 					padding: 0.5rem 1rem;
 					box-shadow: ${boxShadow.border};
@@ -87,7 +99,24 @@ export function NotionRecipePageView(props: {
 	const { recipePage, profile, swr } = props
 
 	async function handleRefresh() {
-		// TODO: stuff.
+		if (!profile.notion_api_key) {
+			throw "no api key"
+		}
+
+		const pageData = await getBlockData({
+			pageId: recipePage.notion_page_id,
+			notionApiToken: profile.notion_api_key,
+		})
+
+		const res = await supabase
+			.from<NotionRecipePage>("notion_recipe_page")
+			.update({
+				notion_data: JSON.stringify(pageData),
+			})
+			.eq("notion_page_id", recipePage.notion_page_id)
+			.single()
+
+		console.log(res)
 		swr.revalidate()
 	}
 
@@ -104,22 +133,44 @@ export function NotionRecipePageView(props: {
 				<Button onClick={handleRefresh}>Refresh</Button>
 			</Row>
 			<Row>
+				<Row>Notion data</Row>
 				<Box>
-					<JSONViewer json={recipePage.notion_data} />
+					<JSONViewer jsonString={recipePage.notion_data} />
 				</Box>
 			</Row>
 			<Row>
+				<Row>Recipe data</Row>
 				<Box>
-					<JSONViewer json={recipePage.recipe_data} />
+					<JSONViewer jsonString={recipePage.recipe_data} />
 				</Box>
 			</Row>
 			<Row>
+				<Row>Extra data</Row>
 				<Box>
-					<JSONViewer json={recipePage.extra_data} />
+					<JSONViewer jsonString={recipePage.extra_data} />
 				</Box>
 			</Row>
 		</Box>
 	)
+}
+
+async function getBlockData(args: { pageId: string; notionApiToken: string }) {
+	const { pageId, notionApiToken } = args
+	const notionRes = await notionApiRequest({
+		method: "GET",
+		path: `/blocks/${pageId}/children`,
+		notionApiToken,
+	})
+	const children = parseNotionJson(await notionRes.json())
+
+	const pageRes = await notionApiRequest({
+		method: "GET",
+		path: `/pages/${pageId}`,
+		notionApiToken,
+	})
+	const page = parseNotionJson(await pageRes.json())
+
+	return { page, children }
 }
 
 export function CreateNotionRecipePage(props: {}) {
@@ -143,18 +194,10 @@ export function CreateNotionRecipePage(props: {}) {
 				throw "Please save a Notion API key first."
 			}
 
-			const notionRes = await notionApiRequest({
-				method: "GET",
-				path: `/blocks/${notionPageId}`,
+			const pageData = await getBlockData({
+				pageId: profile.notion_api_key,
 				notionApiToken: profile.notion_api_key,
 			})
-
-			if (!notionRes.ok) {
-				throw notionRes
-			}
-
-			const pageData = parseNotionJson(await notionRes.json())
-
 			console.log("page data", pageData)
 
 			// Page data was ok.
