@@ -1,7 +1,7 @@
 import { Alert, Auth } from "@supabase/ui"
 import { Response } from "node-fetch"
 import React, { ReactNode, useMemo, useState } from "react"
-import useSWR, { SWRResponse } from "swr"
+import useSWR, { SWRResponse, trigger } from "swr"
 import { NotionRecipePage, Profile, safeJson } from "../lib/models"
 import {
 	getNotionPageIngredients,
@@ -183,6 +183,7 @@ export function CreateNotionRecipePage(props: {}) {
 
 			setNotionPageId("")
 			setResult({ success: result.body })
+			trigger(`user/${profile.id}/pages`)
 		} catch (error) {
 			console.log("Error from req", error)
 			const { message, errno, name, stack } = error
@@ -200,88 +201,26 @@ export function CreateNotionRecipePage(props: {}) {
 	}
 
 	return (
-		<div>
-			<Row>
-				<input
-					disabled={saving}
-					type="text"
-					placeholder="page id"
-					value={notionPageId}
-					onChange={e => setNotionPageId((e.target as any).value)}
-				/>
-			</Row>
-			<Row>
-				<Button disabled={saving} onClick={handleSave}>
-					Create new page!
-				</Button>
-			</Row>
-			<Row>
-				<pre>
-					<code>{JSON.stringify(result, null, "  ")}</code>
-				</pre>
-			</Row>
-		</div>
-	)
-}
-
-export function NotionRecipeExtractor(props: {}) {
-	const profile = useCurrentUserProfile()?.profile
-	const [notionPageId, setNotionPageId] = useState<string>()
-	const [result, setResult] = useState<any>()
-
-	async function handleExtract() {
-		try {
-			if (!notionPageId) {
-				throw "Enter a page ID."
-			}
-
-			const apiKey = profile?.notion_api_key
-			if (!apiKey) {
-				throw "You didn't save your Notion API key."
-			}
-
-			const ingredients = await getNotionPageIngredients({
-				pageId: notionPageId,
-				notionApiToken: apiKey,
-			})
-
-			setResult({ success: ingredients })
-		} catch (error) {
-			console.log("Error from req", error)
-			const { message, errno, name, stack } = error
-			setResult({
-				error: {
-					...error,
-					message,
-					errno,
-					name,
-				},
-			})
-		}
-	}
-
-	if (!profile) {
-		return <Row>No profile found. Log in?</Row>
-	}
-
-	return (
-		<div>
-			<Row>
-				<input
-					type="text"
-					placeholder="page id"
-					value={notionPageId}
-					onChange={e => setNotionPageId((e.target as any).value)}
-				/>
-			</Row>
-			<Row>
-				<Button onClick={handleExtract}>Extract!</Button>
-			</Row>
-			<Row>
-				<pre>
-					<code>{JSON.stringify(result, null, "  ")}</code>
-				</pre>
-			</Row>
-		</div>
+		<Row>
+			<Box>
+				<Row>
+					<input
+						disabled={saving}
+						type="text"
+						placeholder="page id"
+						value={notionPageId}
+						onChange={e => setNotionPageId((e.target as any).value)}
+					/>
+				</Row>
+				<Row>
+					<Button disabled={saving} onClick={handleSave}>
+						Create new page!
+					</Button>
+				</Row>
+				<Row>
+					<JSONViewer json={result} />
+				</Row>
+			</Box>
+		</Row>
 	)
 }
