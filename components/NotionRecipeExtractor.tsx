@@ -397,6 +397,20 @@ export function CreateNotionRecipePage(props: {}) {
 		<Row>
 			<Box>
 				<Row>
+					<p>
+						Parse a Notion page for ingredients and prepare a nutrition facts
+						label. This will not modify your Notion data in any way.
+					</p>
+					<div>Requirements:</div>
+					<ul>
+						<li>Your recipe has a "Ingredients" heading</li>
+						<li>
+							Your ingredients are a bulleted list or checkbox list following
+							the "Ingredients" heading.
+						</li>
+					</ul>
+				</Row>
+				<Row>
 					<label>
 						Page URL or ID
 						<input
