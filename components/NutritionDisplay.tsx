@@ -1,18 +1,17 @@
 import styles from "../styles/NutritionDisplay.module.css"
 
-type Nutrient = {
-	label: string
-	quantity: number
-	unit: string
-}
-
-type NutritionDisplayProps = {
+export type NutritionDisplayProps = {
 	recipeName: string
 	nutrients: Array<Nutrient>
 	dietLabels?: Array<string>
 	healthLabels?: Array<string>
 }
 
+export type Nutrient = {
+	label: string
+	quantity: number
+	unit: string
+}
 export function NutritionDisplay(props: NutritionDisplayProps) {
 	const { recipeName, dietLabels, healthLabels, nutrients } = props
 

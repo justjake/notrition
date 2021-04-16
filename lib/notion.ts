@@ -326,9 +326,9 @@ const extractTextContent = (blockContent: any): string | undefined => {
 	return text
 }
 
-export const getIngredientsFromBlocks = async (args: {
+export const getIngredientsFromBlocks = (args: {
 	children: NotionList<NotionBlock>
-}): Promise<Array<string>> => {
+}): Array<string> => {
 	const { children } = args
 	const notionBlocks = children.results
 
@@ -350,7 +350,7 @@ export const getIngredientsFromBlocks = async (args: {
 		}
 
 		if (scanningIngredients) {
-			if (blockType === "bulleted_list_item") {
+			if (blockType === "bulleted_list_item" || blockType === "to_do") {
 				// expect a bulleted list with ingredients after ingredients header
 				ingredients.push(textContent)
 			} else {

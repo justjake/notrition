@@ -2,6 +2,7 @@ import { Auth } from "@supabase/ui"
 import {
 	ButtonHTMLAttributes,
 	createContext,
+	CSSProperties,
 	HTMLProps,
 	ReactNode,
 	useContext,
@@ -25,13 +26,17 @@ export const colors = {
 	primaryBlue: "#57A8D7",
 }
 
-export function Row(props: { children: React.ReactNode }) {
+export function Row(props: {
+	children: React.ReactNode
+	style?: CSSProperties
+}) {
 	return (
-		<div className="row">
+		<div className="row" style={props.style}>
 			{props.children}
 			<style jsx>{`
 				.row {
 					margin: 0.5rem 0;
+					max-width: 90vw;
 				}
 			`}</style>
 		</div>
@@ -156,13 +161,14 @@ export function JSONViewer(props: { json?: any; jsonString?: string | null }) {
 	)
 }
 
-export function Box(props: { children: ReactNode }) {
+export function Box(props: { children: ReactNode; style?: CSSProperties }) {
 	return (
 		<>
-			<div className="box">{props.children}</div>
+			<div style={props.style} className="box">
+				{props.children}
+			</div>
 			<style jsx>{`
 				.box {
-					font-size: 0.875rem
 					border-radius: 3px;
 					padding: 0.5rem 1rem;
 					box-shadow: ${boxShadow.border};

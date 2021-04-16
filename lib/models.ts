@@ -24,13 +24,17 @@ export interface NotionRecipePage {
 	user_id: UUID
 	notion_page_id: UUID
 	notion_data: JsonOf<NotionPageData> | null
-	recipe_data: JSONB | null
+	recipe_data: JsonOf<RecipeData> | null
 	extra_data: JSONB | null
 }
 
 export interface NotionPageData {
 	page: NotionPage
 	children: NotionList<NotionBlock>
+}
+export interface RecipeData {
+	recipeTitle: string
+	ingredients: string[]
 }
 
 export const safeJson = {

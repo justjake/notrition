@@ -12,14 +12,14 @@ const getNutritionInfo = async (
 		ingr: ingredients,
 	}
 
-	const edamamResponse = await fetch(
-		`${EDAMAM_BASE_URL}?app_id=${process.env.EDAMAM_APP_ID}&app_key=${process.env.EDAMAM_API_TOKEN}`,
-		{
-			method: "POST",
-			body: JSON.stringify(nutritionRequest),
-			headers: { "Content-Type": "application/json" },
-		}
-	)
+	const url = `${EDAMAM_BASE_URL}?app_id=${process.env.EDAMAM_APP_ID}&app_key=${process.env.EDAMAM_API_TOKEN}`
+	console.log("Edamam req", url)
+
+	const edamamResponse = await fetch(url, {
+		method: "POST",
+		body: JSON.stringify(nutritionRequest),
+		headers: { "Content-Type": "application/json" },
+	})
 	const resp = await edamamResponse.json()
 	return resp
 }

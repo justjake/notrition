@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js"
+import { NotionRecipePage, Profile } from "./models"
 
 function die(message: string): never {
 	throw new Error(message)
@@ -19,3 +20,13 @@ export const supabase = createClient(
 	SUPABASE_URL,
 	SECRET_SUPABASE_SERVICE_KEY || SUPABASE_ANON_KEY
 )
+
+export const query = {
+	get notionRecipePage() {
+		return supabase.from<NotionRecipePage>("notion_recipe_page")
+	},
+
+	get profile() {
+		return supabase.from<Profile>("profiles")
+	},
+}
