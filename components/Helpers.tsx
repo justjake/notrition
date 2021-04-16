@@ -1,7 +1,14 @@
 import { Auth } from "@supabase/ui"
-import { ButtonHTMLAttributes, HTMLProps } from "react"
+import {
+	ButtonHTMLAttributes,
+	createContext,
+	HTMLProps,
+	ReactNode,
+	useContext,
+} from "react"
 import useSWR, { SWRResponse } from "swr"
 import { Profile } from "../lib/models"
+import { NotionApiClient } from "../lib/notion"
 import { supabase } from "../lib/supabase"
 
 export const boxShadow = {
@@ -55,9 +62,14 @@ export function Button(props: ButtonHTMLAttributes<HTMLButtonElement>) {
 	)
 }
 
-export type CurrentUserProfile = ReturnType<typeof useCurrentUserProfile>
+const UserProfileContext = createContext<CurrentUserProfile | undefined>(
+	undefined
+)
+UserProfileContext.displayName = "UserProfileContext"
 
-export function useCurrentUserProfile() {
+export type CurrentUserProfile = ReturnType<typeof useCurrentUserProfileOld>
+
+export function UserProfileProvider(props: { children: ReactNode }) {
 	const { user } = Auth.useUser()
 	const dbProfile = useSWR(`user:${user?.id}`, async () => {
 		if (!user) {
@@ -73,6 +85,38 @@ export function useCurrentUserProfile() {
 		return stuff
 	})
 
+	const value: CurrentUserProfile | undefined = user
+		? {
+				swr: dbProfile,
+				user,
+				profile: dbProfile?.data?.body,
+		  }
+		: undefined
+
+	return (
+		<UserProfileContext.Provider value={value}>
+			{props.children}
+		</UserProfileContext.Provider>
+	)
+}
+
+// DEPRECATED
+function useCurrentUserProfileOld() {
+	const { user } = Auth.useUser()
+	const dbProfile = useSWR(`user:${user?.id}`, async () => {
+		if (!user) {
+			return
+		}
+
+		const result = await supabase
+			.from<Profile>("profiles")
+			.select("id, human_name, notion_api_key")
+			.eq("id", user.id)
+			.single()
+
+		return result
+	})
+
 	return {
 		swr: dbProfile,
 		user,
@@ -80,9 +124,13 @@ export function useCurrentUserProfile() {
 	}
 }
 
-function useNotionApiClient() {
-	const { profile } = useCurrentUserProfile()
-	if (profile && profile.notion_api_key) {
-		return NotionApiClient.create(profile.notion_api_key)
+export function useCurrentUserProfile() {
+	return useContext(UserProfileContext)
+}
+
+export function useNotionApiClient() {
+	const apiKey = useCurrentUserProfile()?.profile?.notion_api_key
+	if (apiKey) {
+		return NotionApiClient.create(apiKey)
 	}
 }

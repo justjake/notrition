@@ -9,25 +9,11 @@ import React, {
 import useSWR from "swr"
 import { Profile } from "../lib/models"
 import { supabase } from "../lib/supabase"
-import { Button, Row } from "./Helpers"
+import { Button, Row, useCurrentUserProfile } from "./Helpers"
 
 // See https://github.com/supabase/ui
 export function UserLogin(props: {}) {
-	const { user } = Auth.useUser()
-	const dbProfile = useSWR(user?.id, async id => {
-		if (!id) {
-			return
-		}
-
-		const stuff = await supabase
-			.from<Profile>("profiles")
-			.select("id, human_name, notion_api_key")
-			.eq("id", id)
-			.single()
-
-		return stuff
-	})
-
+	const user = useCurrentUserProfile()
 	const [uiProfile, setUiProfile] = useState<Profile>()
 
 	const handleFormChange = useCallback(
@@ -56,37 +42,34 @@ export function UserLogin(props: {}) {
 			if (!uiProfile) {
 				return
 			}
-			return dbProfile.mutate(async () => {
+
+			if (!user) {
+				return
+			}
+
+			return user.swr.mutate(async () => {
 				const { id, ...updates } = uiProfile
-				const res = await supabase
+				const result = await supabase
 					.from<Profile>("profiles")
 					.update(updates)
 					.eq("id", id)
 					.single()
-
-				const { error, data } = res
-
-				console.log("UPDATE ERROR", error, "PARAMS", uiProfile)
-
-				return res
+				return result
 			})
 		},
-		[dbProfile, uiProfile]
+		[user, uiProfile]
 	)
 
 	useEffect(() => {
-		console.log("useEffect", dbProfile, dbProfile.data, dbProfile.error)
-		if (dbProfile.data) {
-			const nextProfile = dbProfile.data?.body
-			console.log("Set ui profile", nextProfile)
-			setUiProfile(nextProfile || undefined)
+		if (user?.profile) {
+			setUiProfile(user?.profile)
 		}
-	}, [dbProfile.data])
+	}, [user])
 
 	if (user) {
 		return (
 			<>
-				<Row>Signed in: {user.email}</Row>
+				<Row>Signed in: {user.user.email || user.user.id}</Row>
 				<Row>
 					<Button onClick={() => supabase.auth.signOut()}>Sign out</Button>
 				</Row>

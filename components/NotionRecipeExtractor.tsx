@@ -15,6 +15,7 @@ import {
 	CurrentUserProfile,
 	Row,
 	useCurrentUserProfile,
+	useNotionApiClient,
 } from "./Helpers"
 
 function JSONViewer(props: { json?: any; jsonString?: string | null }) {
@@ -54,7 +55,7 @@ function Box(props: { children: ReactNode }) {
 }
 
 export function NotionRecipePageList(props: {}) {
-	const { profile } = useCurrentUserProfile()
+	const profile = useCurrentUserProfile()?.profile
 
 	const pageList = useSWR(`user/${profile?.id}/pages`, async () => {
 		if (!profile) {
@@ -179,13 +180,18 @@ async function getBlockData(args: { pageId: string; notionApiToken: string }) {
 }
 
 export function CreateNotionRecipePage(props: {}) {
-	const { profile } = useCurrentUserProfile()
+	const profile = useCurrentUserProfile()?.profile
+	const notion = useNotionApiClient()
 	const [notionPageId, setNotionPageId] = useState("")
 	const [saving, setSaving] = useState(false)
 	const [result, setResult] = useState<any>()
 
 	if (!profile) {
-		return <Row>No profile found. Log in?</Row>
+		return <Row>No user found. Log in?</Row>
+	}
+
+	if (!notion) {
+		return <Row>Please save a Notion API key.</Row>
 	}
 
 	const handleSave = async () => {
@@ -195,13 +201,9 @@ export function CreateNotionRecipePage(props: {}) {
 
 		setSaving(true)
 		try {
-			if (!profile.notion_api_key) {
-				throw "Please save a Notion API key first."
-			}
-
 			const pageData = await getBlockData({
 				pageId: notionPageId,
-				notionApiToken: profile.notion_api_key,
+				notionApiToken: notion.apiKey,
 			})
 
 			console.log("page data", pageData)
@@ -265,7 +267,7 @@ export function CreateNotionRecipePage(props: {}) {
 }
 
 export function NotionRecipeExtractor(props: {}) {
-	const { profile } = useCurrentUserProfile()
+	const profile = useCurrentUserProfile()?.profile
 	const [notionPageId, setNotionPageId] = useState<string>()
 	const [result, setResult] = useState<any>()
 
