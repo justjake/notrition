@@ -173,7 +173,7 @@ export function NotionRecipePageView(props: {
 								query: { pageId: recipePage.notion_page_id },
 							}}
 						>
-							<a target="_blank">Open standaline label</a>
+							<a target="_blank">Open standalone label</a>
 						</Link>
 					</Button>
 					<Button style={{ marginRight: "1em" }}>
