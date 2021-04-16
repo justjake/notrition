@@ -166,23 +166,15 @@ const extractTextContent = (blockContent: any): string | undefined => {
 	return text
 }
 
-export const getNotionPageIngredients = async (args: {
-	pageId: string
-	notionApiToken: string
-}) => {
-	const { notionApiToken, pageId } = args
-	const response = await notionApiRequest({
-		notionApiToken,
-		method: "GET",
-		path: `/blocks/${pageId}/children`,
-	})
+export const getIngredientsFromBlocks = async (args: {
+	children: NotionList<NotionBlock>
+}): Promise<Array<string>> => {
+	const { children } = args
+	const notionBlocks = children.results
 
-	const bodyJson = parseNotionJson(await response.json())
-
-	const blocks = bodyJson["results"] as Array<any>
 	let scanningIngredients = false
 	const ingredients: Array<string> = []
-	blocks.every(block => {
+	notionBlocks.every(block => {
 		if (block.object !== "block") {
 			return true
 		}
@@ -211,4 +203,9 @@ export const getNotionPageIngredients = async (args: {
 	})
 
 	return ingredients
+}
+
+export const getPageTitle = (page: NotionPage): string => {
+	const pageProperties: any = page.properties
+	return pageProperties["Name"].title[0].plain_text
 }

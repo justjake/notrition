@@ -4,12 +4,14 @@ import React, { ReactNode, useMemo, useState } from "react"
 import useSWR, { SWRResponse } from "swr"
 import { NotionRecipePage, Profile, safeJson } from "../lib/models"
 import {
-	getNotionPageIngredients,
+	getIngredientsFromBlocks,
+	getPageTitle,
 	NotionApiClient,
 	notionApiRequest,
 	parseNotionJson,
 } from "../lib/notion"
 import { supabase } from "../lib/supabase"
+import nutritionFacts from "../pages/api/nutritionFacts"
 import {
 	Box,
 	boxShadow,
@@ -20,6 +22,7 @@ import {
 	useCurrentUserProfile,
 	useNotionApiClient,
 } from "./Helpers"
+import fetch from "node-fetch"
 
 export function NotionRecipePageList(props: {}) {
 	const profile = useCurrentUserProfile()?.profile
@@ -166,6 +169,23 @@ export function CreateNotionRecipePage(props: {}) {
 
 			console.log("page data", pageData)
 
+			const children = pageData.children
+			const ingredients = await getIngredientsFromBlocks({ children })
+
+			const recipeName = getPageTitle(pageData.page)
+
+			const edamamBody = JSON.stringify({
+				ingredients: JSON.stringify(ingredients),
+				recipe_name: recipeName,
+			})
+
+			const extraData = await fetch("/api/nutritionFacts", {
+				method: "POST",
+				body: edamamBody,
+				headers: { "Content-Type": "application/json" },
+			})
+			const extraDataJson = await extraData.json()
+
 			// Page data was ok.
 			const result = await supabase
 				.from<NotionRecipePage>("notion_recipe_page")
@@ -174,6 +194,8 @@ export function CreateNotionRecipePage(props: {}) {
 						notion_page_id: notionPageId,
 						user_id: profile.id,
 						notion_data: safeJson.stringify(pageData),
+						recipe_data: safeJson.stringify(ingredients),
+						extra_data: safeJson.stringify(extraDataJson),
 					},
 				])
 
@@ -214,68 +236,6 @@ export function CreateNotionRecipePage(props: {}) {
 				<Button disabled={saving} onClick={handleSave}>
 					Create new page!
 				</Button>
-			</Row>
-			<Row>
-				<pre>
-					<code>{JSON.stringify(result, null, "  ")}</code>
-				</pre>
-			</Row>
-		</div>
-	)
-}
-
-export function NotionRecipeExtractor(props: {}) {
-	const profile = useCurrentUserProfile()?.profile
-	const [notionPageId, setNotionPageId] = useState<string>()
-	const [result, setResult] = useState<any>()
-
-	async function handleExtract() {
-		try {
-			if (!notionPageId) {
-				throw "Enter a page ID."
-			}
-
-			const apiKey = profile?.notion_api_key
-			if (!apiKey) {
-				throw "You didn't save your Notion API key."
-			}
-
-			const ingredients = await getNotionPageIngredients({
-				pageId: notionPageId,
-				notionApiToken: apiKey,
-			})
-
-			setResult({ success: ingredients })
-		} catch (error) {
-			console.log("Error from req", error)
-			const { message, errno, name, stack } = error
-			setResult({
-				error: {
-					...error,
-					message,
-					errno,
-					name,
-				},
-			})
-		}
-	}
-
-	if (!profile) {
-		return <Row>No profile found. Log in?</Row>
-	}
-
-	return (
-		<div>
-			<Row>
-				<input
-					type="text"
-					placeholder="page id"
-					value={notionPageId}
-					onChange={e => setNotionPageId((e.target as any).value)}
-				/>
-			</Row>
-			<Row>
-				<Button onClick={handleExtract}>Extract!</Button>
 			</Row>
 			<Row>
 				<pre>
