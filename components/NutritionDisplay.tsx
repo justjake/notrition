@@ -6,28 +6,15 @@ type Nutrient = {
 	unit: string
 }
 
-type NutrientByCalories = {
-	label: string
-	quantity: number
-	unit: string
-}
-
 type NutritionDisplayProps = {
 	recipe: string
 	dietLabels: Array<string>
 	healthLabels: Array<string>
 	nutrients: Array<Nutrient>
-	nutrientsByCalories: Array<NutrientByCalories>
 }
 
 export function NutritionDisplay(props: NutritionDisplayProps) {
-	const {
-		recipe,
-		dietLabels,
-		healthLabels,
-		nutrients,
-		nutrientsByCalories,
-	} = props
+	const { recipe, dietLabels, healthLabels, nutrients } = props
 
 	const nutrientsByName: Map<string, number> = new Map()
 	nutrients.forEach(nutrient => {

@@ -4,12 +4,14 @@ import React, { ReactNode, useMemo, useState } from "react"
 import useSWR, { SWRResponse, trigger } from "swr"
 import { NotionRecipePage, Profile, safeJson } from "../lib/models"
 import {
-	getNotionPageIngredients,
+	getIngredientsFromBlocks,
+	getPageTitle,
 	NotionApiClient,
 	notionApiRequest,
 	parseNotionJson,
 } from "../lib/notion"
 import { supabase } from "../lib/supabase"
+import nutritionFacts from "../pages/api/nutritionFacts"
 import {
 	Box,
 	boxShadow,
@@ -20,6 +22,7 @@ import {
 	useCurrentUserProfile,
 	useNotionApiClient,
 } from "./Helpers"
+import fetch from "node-fetch"
 
 export function NotionRecipePageList(props: {}) {
 	const profile = useCurrentUserProfile()?.profile
@@ -166,6 +169,23 @@ export function CreateNotionRecipePage(props: {}) {
 
 			console.log("page data", pageData)
 
+			const children = pageData.children
+			const ingredients = await getIngredientsFromBlocks({ children })
+
+			const recipeName = getPageTitle(pageData.page)
+
+			const edamamBody = JSON.stringify({
+				ingredients: JSON.stringify(ingredients),
+				recipe_name: recipeName,
+			})
+
+			const extraData = await fetch("/api/nutritionFacts", {
+				method: "POST",
+				body: edamamBody,
+				headers: { "Content-Type": "application/json" },
+			})
+			const extraDataJson = await extraData.json()
+
 			// Page data was ok.
 			const result = await supabase
 				.from<NotionRecipePage>("notion_recipe_page")
@@ -174,6 +194,8 @@ export function CreateNotionRecipePage(props: {}) {
 						notion_page_id: notionPageId,
 						user_id: profile.id,
 						notion_data: safeJson.stringify(pageData),
+						recipe_data: safeJson.stringify(ingredients),
+						extra_data: safeJson.stringify(extraDataJson),
 					},
 				])
 
