@@ -23,6 +23,7 @@ import {
 	useNotionApiClient,
 } from "./Helpers"
 import fetch from "node-fetch"
+import Link from "next/link"
 
 export function NotionRecipePageList(props: {}) {
 	const profile = useCurrentUserProfile()?.profile
@@ -109,6 +110,14 @@ export function NotionRecipePageView(props: {
 				</Row>
 				<Row>
 					<Button onClick={handleRefresh}>Refresh</Button>
+					<Link
+						href={{
+							pathname: "/nutrition",
+							query: { pageId: recipePage.notion_page_id },
+						}}
+					>
+						<a target="_blank">Generate Nutrition Label</a>
+					</Link>
 				</Row>
 				<Row>
 					<Row>Notion data</Row>

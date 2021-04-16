@@ -7,23 +7,26 @@ type Nutrient = {
 }
 
 type NutritionDisplayProps = {
-	recipe: string
-	dietLabels: Array<string>
-	healthLabels: Array<string>
+	recipeName: string
 	nutrients: Array<Nutrient>
+	dietLabels?: Array<string>
+	healthLabels?: Array<string>
 }
 
 export function NutritionDisplay(props: NutritionDisplayProps) {
-	const { recipe, dietLabels, healthLabels, nutrients } = props
+	const { recipeName, dietLabels, healthLabels, nutrients } = props
 
-	const nutrientsByName: Map<string, number> = new Map()
+	const nutrientsByName: Map<string, string> = new Map()
 	nutrients.forEach(nutrient => {
-		nutrientsByName.set(nutrient.label, nutrient.quantity)
+		const quantityWithMeasurement = `${nutrient.quantity.toString()} ${
+			nutrient.unit
+		}`
+		nutrientsByName.set(nutrient.label, quantityWithMeasurement)
 	})
 
 	return (
 		<div>
-			<h2>{recipe}</h2>
+			<h2>{recipeName}</h2>
 			<section className={styles.section}>
 				<header className={styles.header}>
 					<h3 className={styles.title}>Nutrition Facts</h3>
@@ -112,12 +115,12 @@ export function NutritionDisplay(props: NutritionDisplayProps) {
 				<table className={styles.table_grid}>
 					<tbody>
 						<tr>
-							<td>Vitamin A 10%</td>
-							<td>Vitamin C 0%</td>
+							<td>Vitamin A {nutrientsByName.get("Vitamin A")}</td>
+							<td>Vitamin C {nutrientsByName.get("Vitamin C")}</td>
 						</tr>
 						<tr>
-							<td>Calcium 10%</td>
-							<td>Iron 6%</td>
+							<td>Calcium {nutrientsByName.get("Calcium")}</td>
+							<td>Iron {nutrientsByName.get("Iron")}</td>
 						</tr>
 					</tbody>
 				</table>
