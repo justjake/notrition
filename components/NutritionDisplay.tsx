@@ -1,3 +1,5 @@
+import { useMemo } from "react"
+import { NotionRecipePage, safeJson } from "../lib/models"
 import styles from "../styles/NutritionDisplay.module.css"
 
 export type NutritionDisplayProps = {
@@ -12,6 +14,7 @@ export type Nutrient = {
 	quantity: number
 	unit: string
 }
+
 export function NutritionDisplay(props: NutritionDisplayProps) {
 	const { recipeName, dietLabels, healthLabels, nutrients } = props
 
@@ -126,4 +129,45 @@ export function NutritionDisplay(props: NutritionDisplayProps) {
 			</section>
 		</div>
 	)
+}
+
+export function NotionRecipePageNutritionDisplay(props: {
+	recipePage: NotionRecipePage
+}) {
+	const { recipePage } = props
+	const nutritionDisplayProps = useMemo<
+		NutritionDisplayProps | undefined
+	>(() => {
+		if (!recipePage.extra_data || !recipePage.recipe_data) {
+			return
+		}
+
+		const recipeData = safeJson.parse(recipePage.recipe_data)
+		const edamamJson = JSON.parse(recipePage.extra_data)
+
+		const rows = edamamJson.totalNutrients
+		const parsedNutrients: Array<Nutrient> = []
+		for (var nutrientName in rows) {
+			if (rows.hasOwnProperty(nutrientName)) {
+				const nutrientData = rows[nutrientName]
+				const nutrient = {
+					label: nutrientData.label,
+					quantity: Math.round(nutrientData.quantity as number),
+					unit: nutrientData.unit,
+				}
+				parsedNutrients.push(nutrient)
+			}
+		}
+
+		return {
+			recipeName: recipeData.recipeTitle,
+			nutrients: parsedNutrients,
+		}
+	}, [recipePage.extra_data, recipePage.recipe_data])
+
+	if (!nutritionDisplayProps) {
+		return null
+	}
+
+	return <NutritionDisplay {...nutritionDisplayProps} />
 }

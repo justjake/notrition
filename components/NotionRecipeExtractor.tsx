@@ -36,6 +36,7 @@ import {
 	NutritionDisplay,
 	NutritionDisplayProps,
 } from "./NutritionDisplay"
+import { v4 } from "uuid"
 
 export function NotionRecipePageList(props: {}) {
 	const profile = useCurrentUserProfile()?.profile
@@ -169,8 +170,7 @@ export function NotionRecipePageView(props: {
 					<Button style={{ marginRight: "1em" }}>
 						<Link
 							href={{
-								pathname: "/nutrition",
-								query: { pageId: recipePage.notion_page_id },
+								pathname: `/recipe/${recipePage.public_id}`,
 							}}
 						>
 							<a target="_blank">Open standalone label</a>
@@ -353,8 +353,9 @@ export function CreateNotionRecipePage(props: {}) {
 				user_id: profile.id,
 				notion_page_id: notionPageId,
 				notion_data: safeJson.stringify(pageData),
-				recipe_data: null,
+				public_id: v4(),
 				extra_data: null,
+				recipe_data: null,
 			}
 
 			const createRes = await query.notionRecipePage.insert([newlyCachedPage])
