@@ -13,7 +13,6 @@ const getNutritionInfo = async (
 	}
 
 	const url = `${EDAMAM_BASE_URL}?app_id=${process.env.EDAMAM_APP_ID}&app_key=${process.env.EDAMAM_API_TOKEN}`
-	console.log("Edamam req", url)
 
 	const edamamResponse = await fetch(url, {
 		method: "POST",
