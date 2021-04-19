@@ -52,17 +52,6 @@ export interface NotionError extends NotionObject<"error"> {
 	message: string
 }
 
-export interface NotionBlock extends NotionObject<"block"> {
-	id: string
-	created_time: string
-	last_edited_time: string
-	has_children: boolean
-	type: string
-	paragraph?: {
-		text?: any[]
-	}
-}
-
 export type NotionText = NotionTextToken[]
 
 export interface NotionTextToken {
@@ -80,6 +69,10 @@ export interface NotionTextToken {
 
 export function getPlainText(text: NotionText): string {
 	return text.map(it => it.plain_text).join("")
+}
+
+export function getNotionUrl(uuid: string): string {
+	return `https://www.notion.so/${uuid.replace(/-/g, "")}`
 }
 
 export interface NotionProperty {
@@ -116,7 +109,25 @@ interface Paragraph extends NotionBlockBase {
 	}
 }
 
+interface BulletedList extends NotionBlockBase {
+	type: "bulleted_list_item"
+	bulleted_list_item: {
+		text: NotionText
+	}
+}
+
+export type NotionBlock = TodoBlock | Paragraph | BulletedList
+
+export interface NotionDatabase extends NotionObject<"database"> {
+	id: string
+	title: NotionText
+	properties: {
+		[key: string]: NotionProperty
+	}
+}
+
 export interface NotionPage extends NotionObject<"page"> {
+	id: string
 	archived: boolean
 	created_time: string
 	last_edited_time: string
@@ -188,6 +199,11 @@ export class NotionApiResponse {
 	}
 }
 
+type SortDirection = "ascending" | "descending"
+type Sort =
+	| { property: string; direction: SortDirection }
+	| { timestamp: "created_time" | "last_edited_time"; direction: SortDirection }
+
 export class NotionApiClient {
 	constructor(public apiKey: string) {}
 
@@ -220,6 +236,34 @@ export class NotionApiClient {
 		})
 
 		return res.asList<NotionBlock>()
+	}
+
+	async getDatabases(): Promise<NotionList<NotionDatabase>> {
+		const res = await this.req({
+			method: "get",
+			path: "/databases",
+		})
+
+		return res.asListOf("database")
+	}
+
+	async queryDatabase(
+		databaseId: string,
+		options: {
+			// TODO: filter
+			sorts?: Sort[]
+			start_cursor?: string
+		} = {}
+	): Promise<NotionList<NotionPage>> {
+		const { sorts } = options
+
+		const res = await this.req({
+			method: "POST",
+			path: `/databases/${databaseId}/query`,
+			body: options,
+		})
+
+		return res.asListOf("page")
 	}
 }
 

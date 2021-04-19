@@ -1,5 +1,4 @@
 import { NextApiHandler } from "next"
-import fetch from "node-fetch"
 import { notionApiRequest, NotionApiRequest } from "../../lib/notion"
 
 const notionApiProxy: NextApiHandler = async (req, res) => {

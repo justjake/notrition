@@ -136,9 +136,11 @@ export function useCurrentUserProfile() {
 
 export function useNotionApiClient() {
 	const apiKey = useCurrentUserProfile()?.profile?.notion_api_key
-	if (apiKey) {
-		return NotionApiClient.create(apiKey)
-	}
+	return useMemo(() => {
+		if (apiKey) {
+			return NotionApiClient.create(apiKey)
+		}
+	}, [apiKey])
 }
 
 export function JSONViewer(props: { json?: any; jsonString?: string | null }) {
@@ -172,6 +174,62 @@ export function Box(props: { children: ReactNode; style?: CSSProperties }) {
 					border-radius: 3px;
 					padding: 0.5rem 1rem;
 					box-shadow: ${boxShadow.border};
+				}
+			`}</style>
+		</>
+	)
+}
+
+const SpinnerIcon = "🥬"
+
+export function Spinner(props: {}) {
+	const size = "1.1em"
+	return (
+		<>
+			<div className="wrapper">
+				<div className="loader">Loading</div>
+			</div>
+			<style jsx>{`
+				.wrapper {
+					display: inline-flex;
+					vertical-align: text-bottom;
+				}
+				.loader {
+					text-indent: -9999em;
+					overflow: hidden;
+					width: ${size};
+					height: ${size};
+					border-radius: 50%;
+					background: #ffffff;
+					background: conic-gradient(
+						rgba(164, 164, 164, 0) 0%,
+						rgba(164, 164, 164, 0) 20%,
+						rgba(164, 164, 164, 1) 80%
+					);
+					position: relative;
+					animation: spin 0.7s infinite linear;
+					transform: translateZ(0);
+				}
+				.loader:after {
+					background: white;
+					width: 70%;
+					height: 70%;
+					border-radius: 50%;
+					content: "";
+					margin: auto;
+					position: absolute;
+					top: 0;
+					left: 0;
+					bottom: 0;
+					right: 0;
+				}
+				@keyframes spin {
+					0% {
+						transform: rotate(0deg);
+					}
+					100% {
+						-webkit-transform: rotate(360deg);
+					}
 				}
 			`}</style>
 		</>

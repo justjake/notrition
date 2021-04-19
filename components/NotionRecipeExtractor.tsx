@@ -1,10 +1,16 @@
 import { Alert, Auth } from "@supabase/ui"
 import { Response } from "node-fetch"
-import React, { ReactNode, useEffect, useMemo, useState } from "react"
+import React, {
+	ReactNode,
+	useCallback,
+	useEffect,
+	useMemo,
+	useState,
+} from "react"
 import useSWR, { SWRResponse, trigger } from "swr"
 import {
-	NotionPageData,
-	NotionRecipePage,
+	NotionPageData as NotritionPageData,
+	NotionRecipePage as NotritionRecipePage,
 	Profile,
 	RecipeData,
 	safeJson,
@@ -37,32 +43,27 @@ import {
 	NutritionDisplayProps,
 } from "./NutritionDisplay"
 import { v4 } from "uuid"
+import {
+	notritionRecipePageKey,
+	notritionRecipePagesKey,
+	useNotritionRecipePages,
+} from "./swr"
 
 export function NotionRecipePageList(props: {}) {
 	const profile = useCurrentUserProfile()?.profile
-
-	const pageList = useSWR(`user/${profile?.id}/pages`, async () => {
-		if (!profile) {
-			return
-		}
-
-		return await supabase
-			.from<NotionRecipePage>("notion_recipe_page")
-			.select("*")
-			.eq("user_id", profile.id)
-	})
+	const pageList = useNotritionRecipePages()
 
 	if (!pageList.data || !profile) {
 		return null
 	}
 
-	if (pageList.data.body === null) {
+	if (pageList.data.length === 0) {
 		return <Row>No pages.</Row>
 	}
 
 	return (
 		<>
-			{pageList.data.body.map(recipePage => {
+			{pageList.data.map(recipePage => {
 				return (
 					<NotionRecipePageView
 						key={recipePage.notion_page_id}
@@ -79,43 +80,42 @@ export function NotionRecipePageList(props: {}) {
 export function NotionRecipePageView(props: {
 	profile: Profile
 	swr: SWRResponse<any, any>
-	recipePage: NotionRecipePage
+	recipePage: NotritionRecipePage
 }) {
 	const notion = useNotionApiClient()
 	const { recipePage, swr } = props
 	const [refreshStatus, setRefreshStatus] = useState<ReactNode>()
 
 	async function handleRefresh() {
-		try {
-			if (!notion) {
-				throw new Error("No API key configured.")
-			}
-
-			for await (const status of updatePersistedRecipePage({
-				notion,
-				pageId: recipePage.notion_page_id,
-				profile: props.profile,
-				cachedPage: recipePage,
-			})) {
-				setRefreshStatus(status)
-			}
-			setRefreshStatus(null)
-		} catch (error) {
-			const { message, name, ...rest } = error
-			const json = {
-				...rest,
-				message,
-				name,
-			}
-			setRefreshStatus(
-				<>
-					<Row>An error occured refreshing recipe data:</Row>
-					<Row>
-						<JSONViewer json={json} />
-					</Row>
-				</>
-			)
-		}
+		// try {
+		// 	if (!notion) {
+		// 		throw new Error("No API key configured.")
+		// 	}
+		// 	for await (const status of updatePersistedRecipePage({
+		// 		notion,
+		// 		notionPageId: recipePage.notion_page_id,
+		// 		profile: props.profile,
+		// 		cachedPage: recipePage,
+		// 	})) {
+		// 		setRefreshStatus(status)
+		// 	}
+		// 	setRefreshStatus(null)
+		// } catch (error) {
+		// 	const { message, name, ...rest } = error
+		// 	const json = {
+		// 		...rest,
+		// 		message,
+		// 		name,
+		// 	}
+		// 	setRefreshStatus(
+		// 		<>
+		// 			<Row>An error occured refreshing recipe data:</Row>
+		// 			<Row>
+		// 				<JSONViewer json={json} />
+		// 			</Row>
+		// 		</>
+		// 	)
+		// }
 	}
 
 	const handleDelete = async () => {
@@ -215,23 +215,238 @@ export function NotionRecipePageView(props: {
 	)
 }
 
+export interface AsyncGeneratorState<T> {
+	isRunning: boolean
+	error?: Error
+	progress?: T
+}
+
+export function useAsyncGeneratorState<T>(
+	typeHint: (...args: any[]) => AsyncIterableIterator<T>
+): [AsyncGeneratorState<T>, (iterator: AsyncIterableIterator<T>) => void] {
+	const [state, setState] = useState<AsyncGeneratorState<T>>({
+		isRunning: false,
+	})
+
+	const trackState = useCallback(async (iterator: AsyncIterableIterator<T>) => {
+		setState(s => ({
+			...s,
+			isRunning: true,
+		}))
+
+		try {
+			for await (const nextProgress of iterator) {
+				setState(s => ({
+					...s,
+					progress: nextProgress,
+				}))
+			}
+		} catch (error) {
+			setState(s => ({ ...s, error }))
+		} finally {
+			setState(s => ({ ...s, isRunning: false }))
+		}
+	}, [])
+
+	return [state, trackState]
+}
+
 async function getBlockData(args: {
-	pageId: string
+	notionPageId: string
 	notion: NotionApiClient
-}): Promise<NotionPageData> {
-	const { pageId, notion } = args
+}): Promise<NotritionPageData> {
+	const { notionPageId: pageId, notion } = args
 	const page = await notion.getPage(pageId)
 	const children = await notion.getChildren(pageId)
 	return { page, children }
 }
 
+export interface RecipeUpdateState {
+	phase:
+		| "read_cache"
+		| "fetch_notion"
+		| "create"
+		| "update_notion"
+		| "fetch_nutrition"
+		| "update_nutrition"
+		| "done"
+	recipePage?: NotritionRecipePage
+	created?: boolean
+	updatedNotion?: boolean
+	updatedNutrition?: boolean
+}
+
+export async function* createOrUpdatePersistedRecipePage(args: {
+	notion: NotionApiClient
+	profile: Profile
+	notionPageId: string
+	cachedPage?: NotritionRecipePage
+	updateNutrition?: boolean
+}): AsyncIterableIterator<RecipeUpdateState> {
+	const { notion, profile, notionPageId } = args
+	const revalidate = () => {
+		const keys = [
+			notritionRecipePageKey(notion, notionPageId),
+			notritionRecipePagesKey(notion),
+		]
+
+		for (const key of keys) {
+			trigger(key)
+		}
+	}
+	let cachedPage = args.cachedPage
+
+	const state: Partial<RecipeUpdateState> = {
+		recipePage: cachedPage,
+	}
+
+	if (!cachedPage) {
+		yield {
+			...state,
+			phase: "read_cache",
+		}
+		const existingPages = await query.notionRecipePage
+			.select("*")
+			.eq("notion_page_id", notionPageId)
+
+		if (existingPages.body && existingPages.body.length > 0) {
+			cachedPage = existingPages.body[0]
+			state.recipePage = cachedPage
+		}
+	}
+
+	const pageData = await getBlockData({
+		notion,
+		notionPageId,
+	})
+
+	if (!cachedPage) {
+		yield {
+			...state,
+			phase: "create",
+		}
+
+		// Page data ok. Create the page.
+		cachedPage = {
+			user_id: profile.id,
+			notion_page_id: notionPageId,
+			notion_data: safeJson.stringify(pageData),
+			public_id: v4(),
+			extra_data: null,
+			recipe_data: null,
+		}
+
+		const createRes = await query.notionRecipePage.insert([cachedPage])
+		if (createRes.error) {
+			throw createRes.error
+		}
+		state.recipePage = cachedPage
+		state.created = true
+		revalidate()
+	} else {
+		// Only update if Notion data changed.
+		const pageDataJson = safeJson.stringify(pageData)
+		if (pageDataJson !== cachedPage.notion_data) {
+			yield {
+				...state,
+				phase: "update_notion",
+			}
+
+			cachedPage = {
+				...cachedPage,
+				notion_data: pageDataJson,
+			}
+
+			await query.notionRecipePage
+				.update({
+					notion_data: pageDataJson,
+				})
+				.eq("notion_page_id", notionPageId)
+			state.updatedNotion = true
+			state.recipePage = cachedPage
+			revalidate()
+		}
+	}
+
+	if (!(args.updateNutrition && (state.created || state.updatedNotion))) {
+		yield {
+			...state,
+			phase: "done",
+		}
+		return
+	}
+
+	const recipeData = extractRecipeData(pageData)
+	const recipeDataJson = safeJson.stringify(recipeData)
+
+	const cachedExtraData =
+		cachedPage.extra_data && JSON.parse(cachedPage.extra_data)
+	if (
+		recipeDataJson === cachedPage.recipe_data &&
+		cachedExtraData &&
+		cachedExtraData.status !== "error"
+	) {
+		yield {
+			...state,
+			phase: "done",
+		}
+	}
+
+	yield {
+		...state,
+		phase: "fetch_nutrition",
+	}
+
+	const edamamBody = JSON.stringify({
+		ingredients: JSON.stringify(recipeData.ingredients),
+		recipe_name: recipeData.recipeTitle,
+	})
+	const extraDataReq = await fetch("/api/nutritionFacts", {
+		method: "POST",
+		body: edamamBody,
+		headers: { "Content-Type": "application/json" },
+	})
+	const extraData = await extraDataReq.json()
+	const extraDataJson = JSON.stringify(extraData)
+
+	yield {
+		...state,
+		phase: "update_nutrition",
+	}
+
+	const updateRes = await query.notionRecipePage
+		.update({
+			recipe_data: recipeDataJson,
+			extra_data: extraDataJson,
+		})
+		.eq("notion_page_id", notionPageId)
+	if (updateRes.error) {
+		throw updateRes.error
+	}
+
+	cachedPage = {
+		...cachedPage,
+		recipe_data: recipeDataJson,
+		extra_data: extraDataJson,
+	}
+	state.recipePage = cachedPage
+	state.updatedNutrition = true
+	revalidate()
+
+	yield {
+		...state,
+		phase: "done",
+	}
+}
+
 async function* updatePersistedRecipePage(args: {
 	notion: NotionApiClient
 	profile: Profile
-	pageId: string
-	cachedPage?: NotionRecipePage
+	notionPageId: string
+	updateNotionData: boolean
+	cachedPage?: NotritionRecipePage
 }) {
-	const { profile, pageId, notion } = args
+	const { profile, notionPageId: pageId, notion } = args
 	let cachedPage = args.cachedPage
 	const revalidate = () => {
 		trigger(`user/${profile.id}/pages`)
@@ -254,7 +469,7 @@ async function* updatePersistedRecipePage(args: {
 	yield <>Fetching new data from Notion</>
 	const pageData = await getBlockData({
 		notion,
-		pageId,
+		notionPageId: pageId,
 	})
 
 	const pageDataJson = safeJson.stringify(pageData)
@@ -310,7 +525,7 @@ async function* updatePersistedRecipePage(args: {
 	return extraData
 }
 
-function extractRecipeData({ page, children }: NotionPageData): RecipeData {
+function extractRecipeData({ page, children }: NotritionPageData): RecipeData {
 	const recipeTitle = getPageTitle(page)
 	const ingredients = getIngredientsFromBlocks({ children })
 	return {
@@ -345,11 +560,11 @@ export function CreateNotionRecipePage(props: {}) {
 		try {
 			const pageData = await getBlockData({
 				notion,
-				pageId: notionPageId,
+				notionPageId: notionPageId,
 			})
 
 			// Page data ok. Create the page.
-			const newlyCachedPage: NotionRecipePage = {
+			const newlyCachedPage: NotritionRecipePage = {
 				user_id: profile.id,
 				notion_page_id: notionPageId,
 				notion_data: safeJson.stringify(pageData),
@@ -367,8 +582,9 @@ export function CreateNotionRecipePage(props: {}) {
 			for await (const status of updatePersistedRecipePage({
 				notion,
 				profile,
-				pageId: notionPageId,
+				notionPageId: notionPageId,
 				cachedPage: newlyCachedPage,
+				updateNotionData: true,
 			})) {
 				setStatus(status)
 			}
