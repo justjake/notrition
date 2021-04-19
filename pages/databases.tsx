@@ -14,7 +14,7 @@ import {
 	createOrUpdatePersistedRecipePage,
 	NotionRecipePageView,
 } from "../components/NotionRecipeExtractor"
-import { useNotritionRecipePage } from "../components/swr"
+import { useNotritionRecipePage } from "../lib/swr"
 import {
 	getNotionUrl,
 	getPageTitle,

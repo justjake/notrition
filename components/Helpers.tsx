@@ -1,20 +1,17 @@
 import { User } from "@supabase/gotrue-js"
 import { Auth } from "@supabase/ui"
-import { AuthSession } from "@supabase/ui/dist/cjs/components/Auth/UserContext"
 import {
 	ButtonHTMLAttributes,
 	createContext,
 	CSSProperties,
-	HTMLProps,
 	ReactNode,
 	useContext,
 	useMemo,
 } from "react"
-import useSWR, { SWRResponse } from "swr"
+import { SWRResponse } from "swr"
 import { Profile } from "../lib/models"
 import { NotionApiClient } from "../lib/notion"
-import { supabase } from "../lib/supabase"
-import { PostgrestSingleResponse, useProfile } from "./swr"
+import { useProfile } from "../lib/swr"
 
 export const boxShadow = {
 	border: `inset 0px 0px 0px 1px rgba(0, 0, 0, 0.1)`,

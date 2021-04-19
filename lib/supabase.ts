@@ -1,5 +1,9 @@
 import { createClient } from "@supabase/supabase-js"
 import { NotionRecipePage, Profile } from "./models"
+import {
+	PostgrestResponse,
+	PostgrestSingleResponse,
+} from "@supabase/postgrest-js/dist/main/lib/types"
 
 function die(message: string): never {
 	throw new Error(message)
@@ -29,4 +33,41 @@ export const query = {
 	get profile() {
 		return supabase.from<Profile>("profiles")
 	},
+}
+
+export type { PostgrestResponse, PostgrestSingleResponse }
+
+export interface PostgrestResponseSuccess<T> {
+	error: null
+	data: T[]
+	body: T[]
+	count: number | null
+	status: number
+	statusText: string
+}
+
+export interface PostgrestSingleResponseSuccess<T> {
+	error: null
+	data: T
+	body: T
+	count: number | null
+	status: number
+	statusText: string
+}
+
+export function assertQueryOk<T>(
+	query: PostgrestSingleResponse<T>
+): asserts query is PostgrestSingleResponseSuccess<T>
+export function assertQueryOk<T>(
+	query: PostgrestResponse<T>
+): asserts query is PostgrestResponseSuccess<T>
+export function assertQueryOk<T>(
+	query: PostgrestResponse<T> | PostgrestSingleResponse<T>
+): asserts query is PostgrestResponseSuccess<T> {
+	if (query.error) {
+		const error = new Error(query.error.message)
+		Object.assign(error, query.error)
+		error.name = "PostgrestQueryErrorResponse"
+		throw error
+	}
 }

@@ -33,7 +33,7 @@ import {
 	notritionRecipePageKey,
 	notritionRecipePagesKey,
 	useNotritionRecipePages,
-} from "./swr"
+} from "../lib/swr"
 
 export function NotionRecipePageList(props: {}) {
 	const profile = useCurrentUserProfile()?.profile
