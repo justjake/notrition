@@ -1,4 +1,3 @@
-import Link from "@supabase/ui/dist/cjs/components/Typography/Link"
 import React, { CSSProperties, ReactNode } from "react"
 import useSWR from "swr"
 import {

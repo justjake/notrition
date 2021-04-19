@@ -8,7 +8,9 @@ import {
 import { NotionApiClient } from "../lib/notion"
 import { NotionRecipePageList } from "./NotionRecipeExtractor"
 
-interface PostgrestResponseSuccess<T> {
+export type { PostgrestResponse, PostgrestSingleResponse }
+
+export interface PostgrestResponseSuccess<T> {
 	error: null
 	data: T[]
 	body: T[]
@@ -17,7 +19,7 @@ interface PostgrestResponseSuccess<T> {
 	statusText: string
 }
 
-interface PostgrestSingleResponseSuccess<T> {
+export interface PostgrestSingleResponseSuccess<T> {
 	error: null
 	data: T
 	body: T
@@ -26,13 +28,13 @@ interface PostgrestSingleResponseSuccess<T> {
 	statusText: string
 }
 
-function assertQueryOk<T>(
+export function assertQueryOk<T>(
 	query: PostgrestSingleResponse<T>
 ): asserts query is PostgrestSingleResponseSuccess<T>
-function assertQueryOk<T>(
+export function assertQueryOk<T>(
 	query: PostgrestResponse<T>
 ): asserts query is PostgrestResponseSuccess<T>
-function assertQueryOk<T>(
+export function assertQueryOk<T>(
 	query: PostgrestResponse<T> | PostgrestSingleResponse<T>
 ): asserts query is PostgrestResponseSuccess<T> {
 	if (query.error) {
@@ -61,8 +63,7 @@ export function useNotritionRecipePage(notionPageId: string) {
 			.select("*")
 			.eq("notion_page_id", notionPageId)
 			.single()
-		// assertQueryOk(result)
-		return result.body
+		return result.body || undefined
 	})
 }
 
@@ -70,7 +71,25 @@ export function useNotritionRecipePages() {
 	const notion = useNotionApiClient()
 	return useSWR(notritionRecipePagesKey(notion), async () => {
 		const result = await query.notionRecipePage.select("*")
-		// assertQueryOk(result)
-		return result.body
+		return result.body || undefined
+	})
+}
+
+export function userProfileKey(userId: string | undefined) {
+	return ["profile", userId]
+}
+
+/**
+ * See also useCurrentUserProfile
+ */
+export function useProfile(userId: string | undefined) {
+	return useSWR(userProfileKey(userId), async () => {
+		if (!userId) {
+			return
+		}
+
+		const res = await query.profile.select("*").eq("id", userId).single()
+
+		return res.body || undefined
 	})
 }

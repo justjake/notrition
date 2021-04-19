@@ -1,4 +1,6 @@
+import { User } from "@supabase/gotrue-js"
 import { Auth } from "@supabase/ui"
+import { AuthSession } from "@supabase/ui/dist/cjs/components/Auth/UserContext"
 import {
 	ButtonHTMLAttributes,
 	createContext,
@@ -12,6 +14,7 @@ import useSWR, { SWRResponse } from "swr"
 import { Profile } from "../lib/models"
 import { NotionApiClient } from "../lib/notion"
 import { supabase } from "../lib/supabase"
+import { PostgrestSingleResponse, useProfile } from "./swr"
 
 export const boxShadow = {
 	border: `inset 0px 0px 0px 1px rgba(0, 0, 0, 0.1)`,
@@ -73,29 +76,21 @@ const UserProfileContext = createContext<CurrentUserProfile | undefined>(
 )
 UserProfileContext.displayName = "UserProfileContext"
 
-export type CurrentUserProfile = ReturnType<typeof useCurrentUserProfileOld>
+export interface CurrentUserProfile {
+	profile: Profile | undefined
+	swr: SWRResponse<Profile | undefined, Error>
+	user: User
+}
 
 export function UserProfileProvider(props: { children: ReactNode }) {
 	const { user } = Auth.useUser()
-	const dbProfile = useSWR(`user:${user?.id}`, async () => {
-		if (!user) {
-			return
-		}
-
-		const stuff = await supabase
-			.from<Profile>("profiles")
-			.select("id, human_name, notion_api_key")
-			.eq("id", user.id)
-			.single()
-
-		return stuff
-	})
+	const dbProfile = useProfile(user?.id)
 
 	const value: CurrentUserProfile | undefined = user
 		? {
 				swr: dbProfile,
 				user,
-				profile: dbProfile?.data?.body,
+				profile: dbProfile.data,
 		  }
 		: undefined
 
@@ -104,30 +99,6 @@ export function UserProfileProvider(props: { children: ReactNode }) {
 			{props.children}
 		</UserProfileContext.Provider>
 	)
-}
-
-// DEPRECATED
-function useCurrentUserProfileOld() {
-	const { user } = Auth.useUser()
-	const dbProfile = useSWR(`user:${user?.id}`, async () => {
-		if (!user) {
-			return
-		}
-
-		const result = await supabase
-			.from<Profile>("profiles")
-			.select("id, human_name, notion_api_key")
-			.eq("id", user.id)
-			.single()
-
-		return result
-	})
-
-	return {
-		swr: dbProfile,
-		user,
-		profile: dbProfile?.data?.body,
-	}
 }
 
 export function useCurrentUserProfile() {

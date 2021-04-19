@@ -1,16 +1,6 @@
-import { Auth } from "@supabase/ui"
 import Head from "next/head"
-import { supabase } from "../lib/supabase"
 import styles from "../styles/Home.module.css"
-import useSWR from "swr"
-import React, {
-	FormEvent,
-	SyntheticEvent,
-	useCallback,
-	useEffect,
-	useState,
-} from "react"
-import { Profile } from "../lib/models"
+import React from "react"
 import { UserLogin } from "../components/UserSettings"
 import {
 	CreateNotionRecipePage,

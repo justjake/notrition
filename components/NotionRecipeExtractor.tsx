@@ -1,13 +1,5 @@
-import { Alert, Auth } from "@supabase/ui"
-import { Response } from "node-fetch"
-import React, {
-	ReactNode,
-	useCallback,
-	useEffect,
-	useMemo,
-	useState,
-} from "react"
-import useSWR, { SWRResponse, trigger } from "swr"
+import React, { ReactNode, useCallback, useMemo, useState } from "react"
+import { SWRResponse, trigger } from "swr"
 import {
 	NotionPageData as NotritionPageData,
 	NotionRecipePage as NotritionRecipePage,
@@ -19,16 +11,11 @@ import {
 	getIngredientsFromBlocks,
 	getPageTitle,
 	NotionApiClient,
-	notionApiRequest,
-	parseNotionJson,
 } from "../lib/notion"
-import { query, supabase } from "../lib/supabase"
-import nutritionFacts from "../pages/api/nutritionFacts"
+import { query } from "../lib/supabase"
 import {
 	Box,
-	boxShadow,
 	Button,
-	CurrentUserProfile,
 	JSONViewer,
 	Row,
 	useCurrentUserProfile,
@@ -36,7 +23,6 @@ import {
 } from "./Helpers"
 import fetch from "node-fetch"
 import Link from "next/link"
-import { SupabaseClient } from "@supabase/supabase-js"
 import {
 	Nutrient,
 	NutritionDisplay,

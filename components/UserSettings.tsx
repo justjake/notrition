@@ -6,7 +6,6 @@ import React, {
 	useEffect,
 	useState,
 } from "react"
-import useSWR from "swr"
 import { Profile } from "../lib/models"
 import { supabase } from "../lib/supabase"
 import { Button, Row, useCurrentUserProfile } from "./Helpers"
@@ -47,12 +46,14 @@ export function UserLogin(props: {}) {
 
 			return user.swr.mutate(async () => {
 				const { id, ...updates } = uiProfile
+
 				const result = await supabase
 					.from<Profile>("profiles")
 					.update(updates)
 					.eq("id", id)
 					.single()
-				return result
+
+				return result.body || undefined
 			})
 		},
 		[user, uiProfile]
