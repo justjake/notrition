@@ -16,7 +16,6 @@ import {
 } from "../components/NotionRecipeExtractor"
 import { useNotritionRecipePage } from "../lib/swr"
 import {
-	getNotionUrl,
 	getPageTitle,
 	getPlainText,
 	NotionDatabase,
@@ -104,7 +103,7 @@ function DatabaseEntry(props: { database: NotionDatabase; page: NotionPage }) {
 						</Button>
 					)}
 					<Button style={{ marginRight: "1em" }}>
-						<a href={getNotionUrl(page.id)} target="_blank">
+						<a href={routes.notionPage(page.id)} target="_blank">
 							Open in Notion
 						</a>
 					</Button>
@@ -151,7 +150,7 @@ function DatabaseRow(props: { database: NotionDatabase }) {
 
 				<div className="actions">
 					<Button style={{ marginRight: "1em" }}>
-						<a href={getNotionUrl(database.id)} target="_blank">
+						<a href={routes.notionPage(database.id)} target="_blank">
 							Open in Notion
 						</a>
 					</Button>

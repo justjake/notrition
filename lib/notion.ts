@@ -71,10 +71,6 @@ export function getPlainText(text: NotionText): string {
 	return text.map(it => it.plain_text).join("")
 }
 
-export function getNotionUrl(uuid: string): string {
-	return `https://www.notion.so/${uuid.replace(/-/g, "")}`
-}
-
 export interface NotionProperty {
 	id: string
 	type: string
