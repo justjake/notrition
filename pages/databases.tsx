@@ -22,6 +22,7 @@ import {
 	NotionDatabase,
 	NotionPage,
 } from "../lib/notion"
+import { routes } from "../lib/routes"
 
 const ErrorView: React.FC<{
 	caption: ReactNode
@@ -97,7 +98,7 @@ function DatabaseEntry(props: { database: NotionDatabase; page: NotionPage }) {
 				<div>
 					{recipePage.data && (
 						<Button style={{ marginRight: "1em" }}>
-							<a href={`/recipes/${recipePage.data.public_id}`} target="_blank">
+							<a href={routes.recipeLabel(recipePage.data)} target="_blank">
 								Open label
 							</a>
 						</Button>

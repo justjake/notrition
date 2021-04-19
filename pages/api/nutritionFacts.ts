@@ -1,5 +1,6 @@
 import { NextApiHandler } from "next"
 import fetch from "node-fetch"
+import { die } from "../../lib/utils"
 
 const EDAMAM_BASE_URL = "https://api.edamam.com/api/nutrition-details"
 
@@ -7,12 +8,16 @@ const getNutritionInfo = async (
 	recipeName: string,
 	ingredients: Array<string>
 ) => {
+	const appId = process.env.EDAMAM_APP_ID || die("No Edamam API key configured")
+	const apiToken =
+		process.env.EDAMAM_API_TOKEN || die("No Edamam API token configured")
+
 	const nutritionRequest = {
 		title: recipeName,
 		ingr: ingredients,
 	}
 
-	const url = `${EDAMAM_BASE_URL}?app_id=${process.env.EDAMAM_APP_ID}&app_key=${process.env.EDAMAM_API_TOKEN}`
+	const url = `${EDAMAM_BASE_URL}?app_id=${appId}&app_key=${apiToken}`
 
 	const edamamResponse = await fetch(url, {
 		method: "POST",

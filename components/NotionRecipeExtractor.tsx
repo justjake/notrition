@@ -34,6 +34,7 @@ import {
 	notritionRecipePagesKey,
 	useNotritionRecipePages,
 } from "../lib/swr"
+import { routes } from "../lib/routes"
 
 export function NotionRecipePageList(props: {}) {
 	const profile = useCurrentUserProfile()?.profile
@@ -141,8 +142,6 @@ export function NotionRecipePageView(props: {
 		}
 	}, [recipePage.extra_data, recipePage.recipe_data])
 
-	const withoutDashes = recipePage.notion_page_id.replace(/-/g, "")
-
 	return (
 		<Row>
 			<Box>
@@ -154,16 +153,15 @@ export function NotionRecipePageView(props: {
 						Delete
 					</Button>
 					<Button style={{ marginRight: "1em" }}>
-						<Link
-							href={{
-								pathname: `/recipe/${recipePage.public_id}`,
-							}}
-						>
+						<Link href={routes.recipeLabel(recipePage)}>
 							<a target="_blank">Open standalone label</a>
 						</Link>
 					</Button>
 					<Button style={{ marginRight: "1em" }}>
-						<a href={`https://www.notion.so/${withoutDashes}`} target="_blank">
+						<a
+							href={routes.notionPage(recipePage.notion_page_id)}
+							target="_blank"
+						>
 							Open in Notion
 						</a>
 					</Button>

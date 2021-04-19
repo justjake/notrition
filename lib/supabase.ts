@@ -4,10 +4,7 @@ import {
 	PostgrestResponse,
 	PostgrestSingleResponse,
 } from "@supabase/postgrest-js/dist/main/lib/types"
-
-function die(message: string): never {
-	throw new Error(message)
-}
+import { die } from "./utils"
 
 export const SUPABASE_URL: string =
 	process.env.NEXT_PUBLIC_SUPABASE_URL ||
