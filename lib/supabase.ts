@@ -1,10 +1,11 @@
-import { createClient } from "@supabase/supabase-js"
+import { createClient, SupabaseClient } from "@supabase/supabase-js"
 import { NotritionRecipePage, Profile } from "./models"
 import {
 	PostgrestResponse,
 	PostgrestSingleResponse,
 } from "@supabase/postgrest-js/dist/main/lib/types"
 import { die } from "./utils"
+import { NextApiRequest, NextApiResponse } from "next"
 
 export const SUPABASE_URL: string =
 	process.env.NEXT_PUBLIC_SUPABASE_URL ||
@@ -67,4 +68,30 @@ export function assertQueryOk<T>(
 		error.name = "PostgrestQueryErrorResponse"
 		throw error
 	}
+}
+
+// API-side auth by token
+// https://github.com/supabase/supabase/blob/c9ec7c151088519abe0ac6ff66313d69f3f0fa36/examples/nextjs-with-supabase-auth/pages/api/getUser.js
+export async function mustAuthToken(req: NextApiRequest) {
+	const token = req.headers.token
+	if (!token || Array.isArray(token)) {
+		throw new Error("Unauthorized")
+	}
+
+	const { user, error } = await supabase.auth.api.getUser(token)
+	if (error) {
+		throw error
+	}
+	if (user === null) {
+		throw new Error("No user returned")
+	}
+	return user
+}
+
+// SSR-side auth by cookie.
+// Requires user posted /api/auth to connect the session.
+// https://github.com/supabase/supabase/blob/c9ec7c151088519abe0ac6ff66313d69f3f0fa36/examples/nextjs-with-supabase-auth/pages/profile.js#L32
+export async function authCookie(req: NextApiRequest) {
+	const { user } = await supabase.auth.api.getUserByCookie(req)
+	return user
 }
