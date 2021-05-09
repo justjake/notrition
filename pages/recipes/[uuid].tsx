@@ -6,11 +6,11 @@ import {
 	NutritionDisplay,
 	NutritionDisplayProps,
 } from "../../components/NutritionDisplay"
-import { NotionRecipePage, safeJson } from "../../lib/models"
+import { NotritionRecipePage, safeJson } from "../../lib/models"
 import { query } from "../../lib/supabase"
 
 interface RecipePageProps {
-	page: NotionRecipePage
+	page: NotritionRecipePage
 }
 
 export const getServerSideProps: GetServerSideProps<

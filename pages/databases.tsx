@@ -9,11 +9,7 @@ import {
 	Spinner,
 	useCurrentUserProfile,
 } from "../components/Helpers"
-import {
-	useAsyncGeneratorState,
-	createOrUpdatePersistedRecipePage,
-	NotionRecipePageView,
-} from "../components/NotionRecipeExtractor"
+import { NotionRecipePageView } from "../components/NotionRecipeExtractor"
 import { useNotritionRecipePage } from "../lib/swr"
 import {
 	getPageTitle,
@@ -22,6 +18,8 @@ import {
 	NotionPage,
 } from "../lib/notion"
 import { routes } from "../lib/routes"
+import { useAsyncGeneratorState } from "../lib/useAsyncGeneratorState"
+import { upsertNotritionRecipePage } from "../lib/upsertRecipePage"
 
 const ErrorView: React.FC<{
 	caption: ReactNode
@@ -65,7 +63,7 @@ function DatabaseEntry(props: { database: NotionDatabase; page: NotionPage }) {
 	const { database, page } = props
 	const recipePage = useNotritionRecipePage(page.id)
 	const [updateState, trackUpdate] = useAsyncGeneratorState(
-		createOrUpdatePersistedRecipePage
+		upsertNotritionRecipePage
 	)
 	const notion = useNotionApiClient()
 	const profile = useCurrentUserProfile()?.profile
@@ -76,7 +74,7 @@ function DatabaseEntry(props: { database: NotionDatabase; page: NotionPage }) {
 		}
 
 		trackUpdate(
-			createOrUpdatePersistedRecipePage({
+			upsertNotritionRecipePage({
 				notion,
 				notionPageId: page.id,
 				profile,

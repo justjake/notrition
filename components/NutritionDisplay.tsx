@@ -1,5 +1,5 @@
 import { useMemo } from "react"
-import { NotionRecipePage, safeJson } from "../lib/models"
+import { NotritionRecipePage, safeJson } from "../lib/models"
 import styles from "../styles/NutritionDisplay.module.css"
 
 export type NutritionDisplayProps = {
@@ -132,7 +132,7 @@ export function NutritionDisplay(props: NutritionDisplayProps) {
 }
 
 export function NotionRecipePageNutritionDisplay(props: {
-	recipePage: NotionRecipePage
+	recipePage: NotritionRecipePage
 }) {
 	const { recipePage } = props
 	const nutritionDisplayProps = useMemo<

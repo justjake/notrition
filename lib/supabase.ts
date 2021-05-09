@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js"
-import { NotionRecipePage, Profile } from "./models"
+import { NotritionRecipePage, Profile } from "./models"
 import {
 	PostgrestResponse,
 	PostgrestSingleResponse,
@@ -24,7 +24,7 @@ export const supabase = createClient(
 
 export const query = {
 	get notionRecipePage() {
-		return supabase.from<NotionRecipePage>("notion_recipe_page")
+		return supabase.from<NotritionRecipePage>("notion_recipe_page")
 	},
 
 	get profile() {

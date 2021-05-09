@@ -111,10 +111,24 @@ export function useNotionApiClient() {
 	}, [apiKey])
 }
 
-export function JSONViewer(props: { json?: any; jsonString?: string | null }) {
-	const { json, jsonString } = props
+export function JSONViewer(props: {
+	json?: any
+	jsonString?: string | null
+	error?: Error
+}) {
+	const { json, jsonString, error } = props
 	const formatted = useMemo(() => {
 		let value = json
+
+		if (error) {
+			const { name, message, stack, ...rest } = error
+			value = {
+				...rest,
+				name,
+				message,
+				stack,
+			}
+		}
 
 		if (jsonString) {
 			value = JSON.parse(jsonString)

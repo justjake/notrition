@@ -20,7 +20,7 @@ export interface Profile {
  * Stores data about a Notion page.
  * Caches recipe info.
  */
-export interface NotionRecipePage {
+export interface NotritionRecipePage {
 	user_id: UUID
 	notion_page_id: UUID
 	notion_data: JsonOf<NotionPageData> | null
