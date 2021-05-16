@@ -137,7 +137,6 @@ export function LayoutHeader(props: { hideNav?: boolean; hideAuth?: boolean }) {
 export function LayoutFooter(props: {}) {
 	return (
 		<footer className="footer">
-			<p>Pre-alpha work-in-progress</p>
 			<p>
 				<span style={{ margin: "0 0.3em" }}>Made by </span>
 				<a
@@ -155,6 +154,14 @@ export function LayoutFooter(props: {}) {
 				>
 					Jake Teton-Landis
 				</a>
+			</p>
+			<p>
+				Pre-alpha work-in-progress •
+				<Link href="/legal">
+					<a className="footer-link" style={{ marginLeft: "0.5em" }}>
+						Privacy & Terms
+					</a>
+				</Link>
 			</p>
 			<style jsx>{`
 				p {

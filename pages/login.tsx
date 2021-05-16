@@ -1,5 +1,6 @@
 import { Auth } from "@supabase/ui"
 import Head from "next/head"
+import Link from "next/link"
 import { useRouter } from "next/router"
 import React, { useEffect, useMemo } from "react"
 import {
@@ -98,7 +99,11 @@ export default function LoginPage(props: {}) {
 					>
 						<Row>
 							<h1 className="login-header">
-								<LogoEmojis fontSize="1em" />
+								<Link href="/">
+									<a>
+										<LogoEmojis fontSize="1em" />
+									</a>
+								</Link>
 								<span className="login-sep"> • </span>
 								{title}
 							</h1>

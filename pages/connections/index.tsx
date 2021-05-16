@@ -3,7 +3,6 @@
  */
 
 import Link from "@supabase/ui/dist/cjs/components/Typography/Link"
-import { access } from "fs/promises"
 import { GetServerSideProps } from "next"
 import { Box, Button, Row } from "../../components/Helpers"
 import {
