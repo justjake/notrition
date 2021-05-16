@@ -2,7 +2,13 @@ import { Auth } from "@supabase/ui"
 import Head from "next/head"
 import { useRouter } from "next/router"
 import React, { useEffect, useMemo } from "react"
-import { Box, Row, useCurrentUserProfile } from "../components/Helpers"
+import {
+	Box,
+	Center,
+	Row,
+	Spinner,
+	useCurrentUserProfile,
+} from "../components/Helpers"
 import { LayoutHeader, LogoEmojis } from "../components/Layout"
 import { notrition } from "../lib/notrition"
 import { routes } from "../lib/routes"
@@ -28,12 +34,22 @@ export default function LoginPage(props: {}) {
 	const user = useCurrentUserProfile()
 	const router = useRouter()
 	const authView = getAuthViewType(router.query["action"])
-	const setAuthView = (authView: SupabaseAuthViewType) => {
-		router.push(routes.login({ authView }))
+	const setAuthView = (authView: SupabaseAuthViewType | undefined) => {
+		router.replace(routes.login({ authView }))
 	}
 
 	useEffect(() => {
-		if (!user || authView) {
+		const { data: authListener } = supabase.auth.onAuthStateChange(event => {
+			if (event === "USER_UPDATED") {
+				setAuthView(undefined)
+			}
+		})
+
+		return () => authListener?.unsubscribe()
+	}, [authView, router])
+
+	useEffect(() => {
+		if (!user || authView === "forgotten_password") {
 			return
 		}
 
@@ -46,9 +62,10 @@ export default function LoginPage(props: {}) {
 	}, [user, router, authView])
 
 	let action = (
-		<div className="center-child">
-			<p>Logged in.</p>
-		</div>
+		<Center>
+			<Spinner />
+			<p style={{ marginLeft: "1em" }}>Authenticating...</p>
+		</Center>
 	)
 
 	if (!user) {

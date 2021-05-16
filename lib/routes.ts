@@ -3,6 +3,7 @@ import { SupabaseAuthViewType } from "./supabase"
 
 export const routes = {
 	default() {
+		// TODO: /recipes ?
 		return "/"
 	},
 
@@ -16,6 +17,10 @@ export const routes = {
 			return `/login?action=${args.authView}`
 		}
 		return `/login`
+	},
+
+	logout() {
+		return "/logout"
 	},
 
 	recipeLabel(recipePage: NotritionRecipePage) {

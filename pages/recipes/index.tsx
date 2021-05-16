@@ -1,5 +1,10 @@
 import React from "react"
-import { LayoutHeader, LayoutRow } from "../../components/Layout"
+import {
+	Layout,
+	LayoutFooter,
+	LayoutHeader,
+	LayoutRow,
+} from "../../components/Layout"
 import {
 	CreateNotionRecipePage,
 	NotionRecipePageList,
@@ -7,12 +12,11 @@ import {
 
 export default function RecipesPage(props: {}) {
 	return (
-		<>
-			<LayoutHeader />
+		<Layout header={<LayoutHeader />} footer={<LayoutFooter />}>
 			<LayoutRow>
 				<CreateNotionRecipePage />
 				<NotionRecipePageList />
 			</LayoutRow>
-		</>
+		</Layout>
 	)
 }

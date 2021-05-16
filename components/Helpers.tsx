@@ -1,7 +1,7 @@
 import { User } from "@supabase/gotrue-js"
 import { Auth } from "@supabase/ui"
 import { useRouter } from "next/router"
-import {
+import React, {
 	ButtonHTMLAttributes,
 	createContext,
 	CSSProperties,
@@ -18,17 +18,17 @@ import { routes } from "../lib/routes"
 import { supabase } from "../lib/supabase"
 import { useProfile } from "../lib/swr"
 
+export const colors = {
+	primaryBlue: "#57A8D7", // notion ripoff
+	border: "rgba(0, 0, 0, 0.1)",
+}
+
 export const boxShadow = {
-	border: `inset 0px 0px 0px 1px rgba(0, 0, 0, 0.1)`,
+	border: `inset 0px 0px 0px 1px ${colors.border}`,
 }
 
 export const fonts = {
 	default: `-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif`,
-}
-
-export const colors = {
-	// Notion ripoff colors:
-	primaryBlue: "#57A8D7",
 }
 
 export function Row(props: {
@@ -241,5 +241,22 @@ export function Spinner(props: {}) {
 				}
 			`}</style>
 		</>
+	)
+}
+
+export function Center(props: { column?: boolean; children: React.ReactNode }) {
+	return (
+		<div className="center">
+			{props.children}
+			<style jsx>{`
+				.center {
+					flex: 1;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					flex-direction: ${props.column ? "column" : "row"};
+				}
+			`}</style>
+		</div>
 	)
 }
