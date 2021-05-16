@@ -2,10 +2,16 @@
  * List connections
  */
 
+import Link from "@supabase/ui/dist/cjs/components/Typography/Link"
 import { access } from "fs/promises"
 import { GetServerSideProps } from "next"
 import { Box, Button, Row } from "../../components/Helpers"
-import { LayoutHeader, LayoutRow } from "../../components/Layout"
+import {
+	Layout,
+	LayoutFooter,
+	LayoutHeader,
+	LayoutRow,
+} from "../../components/Layout"
 import {
 	UserNotionAccessToken,
 	UserNotionAccessTokenColumns,
@@ -68,18 +74,24 @@ const AccessTokenView: React.FC<{
 const ConnectionsIndexPage: React.FC<ConnectionsIndexProps> = props => {
 	const { accessTokens } = props
 	return (
-		<>
-			<LayoutHeader />
+		<Layout header={<LayoutHeader />} footer={<LayoutFooter />}>
 			<LayoutRow>
 				<h1>Connections</h1>
 				<p>
 					Connect to your Notion workspaces so Notrition can find your recipes.
 				</p>
+				<p>
+					<Link target="_blank" href={"TODO:oauth"}>
+						<a>
+							<Button>Connection Notion workspace</Button>
+						</a>
+					</Link>
+				</p>
 			</LayoutRow>
 			<LayoutRow>
 				<AccessTokensList accessTokens={accessTokens} />
 			</LayoutRow>
-		</>
+		</Layout>
 	)
 }
 
