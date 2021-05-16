@@ -6,6 +6,7 @@ const EncodedType = Symbol("encoded type")
 type JsonOf<T> = JSONB & { [EncodedType]: T }
 export type UUID = string
 export type JSONB = string // does it SERDE this for us? unsure.
+export type Timestamp = string
 
 /**
  * Every user has a "profile" that stores related data about the user
@@ -27,6 +28,7 @@ export interface NotritionRecipePage {
 	recipe_data: JsonOf<RecipeData> | null
 	extra_data: JSONB | null
 	public_id: UUID
+	notion_access_token_id: UUID | null
 }
 
 export interface NotionPageData {
@@ -46,4 +48,38 @@ export const safeJson = {
 	stringify<T>(value: T, indent?: string): JsonOf<T> {
 		return JSON.stringify(value, undefined, indent) as JsonOf<T>
 	},
+}
+
+/*
+	id uuid primary key,
+  user_id uuid references auth.users,
+  inserted_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+  access_token text,
+  workspace_name text,
+  workspace_icon text,
+  bot_id text
+	*/
+export interface NotionAccessToken {
+	id: UUID
+	user_id: UUID
+	inserted_at: Timestamp
+	updated_at: Timestamp
+	access_token: string
+	workspace_name: string
+	workspace_icon: string
+	bot_id: string
+}
+
+export type UserNotionAccessToken = Omit<NotionAccessToken, "access_token">
+export const UserNotionAccessTokenColumns: {
+	[K in keyof UserNotionAccessToken]: true
+} = {
+	id: true,
+	user_id: true,
+	inserted_at: true,
+	updated_at: true,
+	workspace_name: true,
+	workspace_icon: true,
+	bot_id: true,
 }

@@ -1,16 +1,21 @@
 import { User } from "@supabase/gotrue-js"
 import { Auth } from "@supabase/ui"
+import { useRouter } from "next/router"
 import {
 	ButtonHTMLAttributes,
 	createContext,
 	CSSProperties,
 	ReactNode,
 	useContext,
+	useEffect,
 	useMemo,
 } from "react"
 import { SWRResponse } from "swr"
 import { Profile } from "../lib/models"
 import { NotionApiClient } from "../lib/notion"
+import { notrition } from "../lib/notrition"
+import { routes } from "../lib/routes"
+import { supabase } from "../lib/supabase"
 import { useProfile } from "../lib/swr"
 
 export const boxShadow = {
@@ -82,6 +87,27 @@ export interface CurrentUserProfile {
 export function UserProfileProvider(props: { children: ReactNode }) {
 	const { user } = Auth.useUser()
 	const dbProfile = useProfile(user?.id)
+	const router = useRouter()
+
+	useEffect(() => {
+		const { data: authListener } = supabase.auth.onAuthStateChange(
+			(event, session) => {
+				if (event === "PASSWORD_RECOVERY") {
+					router.push(
+						routes.login({
+							authView: "forgotten_password",
+						})
+					)
+				}
+
+				notrition.auth(event, session)
+			}
+		)
+
+		return () => {
+			authListener?.unsubscribe()
+		}
+	}, [router])
 
 	const value: CurrentUserProfile | undefined = user
 		? {

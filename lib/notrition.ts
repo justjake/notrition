@@ -4,7 +4,7 @@ import fetch, { Headers } from "node-fetch"
 import { supabase } from "./supabase"
 
 export class NotritionClient {
-	async auth(event: AuthChangeEvent, session: AuthSession) {
+	async auth(event: AuthChangeEvent, session: AuthSession | null) {
 		const res = await fetch("/api/auth", {
 			method: "POST",
 			headers: new Headers({

@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js"
-import { NotritionRecipePage, Profile } from "./models"
+import { NotionAccessToken, NotritionRecipePage, Profile } from "./models"
 import {
 	PostgrestResponse,
 	PostgrestSingleResponse,
@@ -30,6 +30,10 @@ export const query = {
 
 	get profile() {
 		return supabase.from<Profile>("profiles")
+	},
+
+	get notionAccessToken() {
+		return supabase.from<NotionAccessToken>("notion_access_token")
 	},
 }
 
@@ -91,7 +95,31 @@ export async function mustAuthToken(req: NextApiRequest) {
 // SSR-side auth by cookie.
 // Requires user posted /api/auth to connect the session.
 // https://github.com/supabase/supabase/blob/c9ec7c151088519abe0ac6ff66313d69f3f0fa36/examples/nextjs-with-supabase-auth/pages/profile.js#L32
-export async function authCookie(req: NextApiRequest) {
+export async function authCookie(req: any) {
 	const { user } = await supabase.auth.api.getUserByCookie(req)
 	return user
+}
+
+export type SupabaseAuthViewType =
+	| "sign_in"
+	| "sign_up"
+	| "forgotten_password"
+	| "magic_link"
+
+export function getAuthViewType(
+	string: string | string[] | undefined
+): SupabaseAuthViewType | undefined {
+	if (Array.isArray(string)) {
+		string = string[0]
+	}
+
+	if (
+		string === "sign_in" ||
+		string === "sign_up" ||
+		string === "forgotten_password" ||
+		string === "magic_link"
+	) {
+		return string
+	}
+	return undefined
 }
