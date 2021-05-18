@@ -10,7 +10,7 @@ import {
 	Spinner,
 	useCurrentUserProfile,
 } from "../components/Helpers"
-import { LayoutHeader, LogoEmojis } from "../components/Layout"
+import { AuthLayout, LayoutHeader, LogoEmojis } from "../components/Layout"
 import { notrition } from "../lib/notrition"
 import { routes } from "../lib/routes"
 import {
@@ -26,7 +26,7 @@ function getAuthViewTitle(view: SupabaseAuthViewType | undefined): string {
 		case "sign_up":
 			return "Sign Up"
 		default:
-			return "Sign In"
+			return "Log In"
 	}
 }
 
@@ -84,66 +84,11 @@ export default function LoginPage(props: {}) {
 
 	const title = getAuthViewTitle(authView)
 	return (
-		<>
+		<AuthLayout title={title}>
 			<Head>
 				<title>Notrition - {title}</title>
 			</Head>
-			<div className="login-container center-child">
-				<div className="login-box">
-					<Box
-						style={{
-							minHeight: "42vh",
-							display: "flex",
-							flexDirection: "column",
-						}}
-					>
-						<Row>
-							<h1 className="login-header">
-								<Link href="/">
-									<a>
-										<LogoEmojis fontSize="1em" />
-									</a>
-								</Link>
-								<span className="login-sep"> • </span>
-								{title}
-							</h1>
-						</Row>
-						<Row
-							style={{ display: "flex", flexGrow: 1, flexDirection: "column" }}
-						>
-							{action}
-						</Row>
-					</Box>
-				</div>
-			</div>
-			<style jsx>{`
-				.center-child {
-					display: flex;
-					justify-content: center;
-					align-items: center;
-					height: 100%;
-					flex-grow: 1;
-				}
-
-				.login-container {
-					width: 100vw;
-					height: 100vh;
-				}
-
-				.login-box {
-					max-width: 100%;
-					width: 560px;
-				}
-
-				.login-header {
-					margin: 0;
-					font-size: inherit;
-				}
-
-				.login-sep {
-					margin: 0 0.5em;
-				}
-			`}</style>
-		</>
+			{action}
+		</AuthLayout>
 	)
 }

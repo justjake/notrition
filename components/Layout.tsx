@@ -3,8 +3,74 @@ import { useRouter } from "next/router"
 import Link from "next/link"
 import { routes } from "../lib/routes"
 import { IconLogOut } from "@supabase/ui"
-import { Button, colors, useCurrentUserProfile } from "./Helpers"
+import { Box, Button, colors, Row, useCurrentUserProfile } from "./Helpers"
 import { supabase } from "../lib/supabase"
+
+export function AuthLayout(props: {
+	children: React.ReactNode
+	title: React.ReactNode
+}) {
+	return (
+		<>
+			<div className="login-container center-child">
+				<div className="login-box">
+					<Box
+						style={{
+							minHeight: "42vh",
+							display: "flex",
+							flexDirection: "column",
+						}}
+					>
+						<Row>
+							<h1 className="login-header">
+								<Link href="/">
+									<a>
+										<LogoEmojis fontSize="1em" />
+									</a>
+								</Link>
+								<span className="login-sep"> • </span>
+								{props.title}
+							</h1>
+						</Row>
+						<Row
+							style={{ display: "flex", flexGrow: 1, flexDirection: "column" }}
+						>
+							{props.children}
+						</Row>
+					</Box>
+				</div>
+			</div>
+			<style jsx>{`
+				.center-child {
+					display: flex;
+					justify-content: center;
+					align-items: center;
+					height: 100%;
+					flex-grow: 1;
+				}
+
+				.login-container {
+					width: 100vw;
+					height: 100vh;
+				}
+
+				.login-box {
+					max-width: 100%;
+					width: 560px;
+				}
+
+				.login-header {
+					margin: 0;
+					font-size: inherit;
+				}
+
+				.login-sep {
+					margin: 0 0.5em;
+				}
+			`}</style>
+		</>
+	)
+}
 
 export function Layout(props: {
 	header?: React.ReactNode

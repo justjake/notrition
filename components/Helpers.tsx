@@ -244,7 +244,7 @@ export function Spinner(props: {}) {
 	)
 }
 
-export function Center(props: { column?: boolean; children: React.ReactNode }) {
+export function Center(props: { asRow?: boolean; children: React.ReactNode }) {
 	return (
 		<div className="center">
 			{props.children}
@@ -254,7 +254,7 @@ export function Center(props: { column?: boolean; children: React.ReactNode }) {
 					display: flex;
 					align-items: center;
 					justify-content: center;
-					flex-direction: ${props.column ? "column" : "row"};
+					flex-direction: ${props.asRow ? "row" : "column"};
 				}
 			`}</style>
 		</div>

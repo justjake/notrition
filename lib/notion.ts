@@ -1,6 +1,14 @@
 import fetch, { Response } from "node-fetch"
+import { routes } from "./routes"
+import { die } from "./utils"
 
 const NOTION_API_BASE_URL = "https://api.notion.com/v1"
+const NOTION_OAUTH_CLIENT_ID =
+	process.env.NEXT_PUBLIC_NOTION_OAUTH_CLIENT_ID ||
+	die("No Notion oauth client ID configured")
+const NOTION_OAUTH_CLIENT_SECRET = process.env.NOTION_OAUTH_CLIENT_SECRET
+// export const OAUTH_REDIRECT_URI = "https://www.notrition.info/authorize"
+export const OAUTH_REDIRECT_URI = "http://localhost:3000/authorize"
 
 export interface NotionApiRequest {
 	notionApiToken: string
@@ -200,11 +208,70 @@ type Sort =
 	| { property: string; direction: SortDirection }
 	| { timestamp: "created_time" | "last_edited_time"; direction: SortDirection }
 
+export interface NotionOauthToken {
+	access_token: string
+	workspace_name: string
+	workspace_icon: string
+	bot_id: string
+}
+
 export class NotionApiClient {
 	constructor(public apiKey: string) {}
 
 	static create(apiKey: string) {
 		return new this(apiKey)
+	}
+
+	static getOathUrl(): string {
+		const url = new URL(`${NOTION_API_BASE_URL}/oauth/authorize`)
+		url.searchParams.append("client_id", NOTION_OAUTH_CLIENT_ID)
+		// TODO
+		url.searchParams.append("redirect_uri", OAUTH_REDIRECT_URI)
+		url.searchParams.append("response_type", "code")
+		return url.toString()
+	}
+
+	static async createToken(args: {
+		code: string
+		redirect_uri: string
+	}): Promise<NotionOauthToken> {
+		if (!NOTION_OAUTH_CLIENT_SECRET) {
+			throw new Error("No oauth client secret available. Call on the server.")
+		}
+
+		const basicAuthCreds = `${NOTION_OAUTH_CLIENT_ID}:${NOTION_OAUTH_CLIENT_SECRET}`
+		const base64 = Buffer.from(basicAuthCreds).toString("base64")
+
+		const req = {
+			method: "post",
+			body: JSON.stringify({
+				grant_type: "authorization_code",
+				...args,
+			}),
+			headers: {
+				Authorization: `Basic ${base64}`,
+				"Content-Type": "application/json",
+			},
+		}
+		const res = await fetch(`${NOTION_API_BASE_URL}/oauth/token`, req)
+
+		let json: NotionOauthToken | { error: string } | undefined = undefined
+		try {
+			json = await res.json()
+		} catch (error) {
+			// pass
+		}
+
+		if (json && !("error" in json)) {
+			return json
+		}
+
+		throw Object.assign(new Error(json?.error ?? "Unknown"), {
+			name: "NotionOAuthError",
+			req,
+			res,
+			json,
+		})
 	}
 
 	async req(args: Omit<NotionApiRequest, "notionApiToken">) {

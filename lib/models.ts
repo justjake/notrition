@@ -83,3 +83,27 @@ export const UserNotionAccessTokenColumns: {
 	workspace_icon: true,
 	bot_id: true,
 }
+
+export function sliceUserNotionAccessToken(
+	token: NotionAccessToken
+): UserNotionAccessToken {
+	const {
+		id,
+		user_id,
+		inserted_at,
+		updated_at,
+		workspace_icon,
+		workspace_name,
+		bot_id,
+	} = token
+
+	return {
+		id,
+		user_id,
+		inserted_at,
+		updated_at,
+		workspace_icon,
+		workspace_name,
+		bot_id,
+	}
+}
