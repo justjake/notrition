@@ -6,19 +6,21 @@ import { IconLogOut } from "@supabase/ui"
 import { Box, Button, colors, Row, useCurrentUserProfile } from "./Helpers"
 import { supabase } from "../lib/supabase"
 
+const SMALL = "500px"
+
 export function AuthLayout(props: {
 	children: React.ReactNode
 	title: React.ReactNode
 }) {
 	return (
 		<>
-			<div className="login-container center-child">
+			<div className="login-container">
 				<div className="login-box">
 					<Box
 						style={{
-							minHeight: "42vh",
 							display: "flex",
 							flexDirection: "column",
+							flexGrow: 1,
 						}}
 					>
 						<Row>
@@ -41,22 +43,31 @@ export function AuthLayout(props: {
 				</div>
 			</div>
 			<style jsx>{`
-				.center-child {
-					display: flex;
-					justify-content: center;
-					align-items: center;
-					height: 100%;
-					flex-grow: 1;
-				}
-
 				.login-container {
 					width: 100vw;
 					height: 100vh;
+
+					display: flex;
+					justify-content: center;
+					align-items: center;
+					flex-grow: 1;
+				}
+
+				@media screen and (max-width: 500px) {
+					.login-container {
+						justify-content: stretch;
+						align-items: stretch;
+					}
 				}
 
 				.login-box {
+					display: flex;
+					align-items: stretch;
+					justify-content: stretch;
+
 					max-width: 100%;
-					width: 560px;
+					width: 500px;
+					min-height: 42vh;
 				}
 
 				.login-header {

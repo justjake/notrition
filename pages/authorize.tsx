@@ -19,6 +19,7 @@ import Link from "@supabase/ui/dist/cjs/components/Typography/Link"
 import { useRouter } from "next/router"
 import { CLIENT_RENEG_WINDOW } from "node:tls"
 import { v4 } from "uuid"
+import { WorkspaceIcon } from "../components/NotionIntegration"
 
 type AuthorizeQueryParams = {
 	state: string | undefined
@@ -52,6 +53,11 @@ async function createAndPersistToken(args: {
 		workspace_icon,
 		workspace_name,
 	} = await NotionApiClient.createToken({ redirect_uri, code })
+
+	const existing = await query.notionAccessToken
+		.select("*")
+		.eq("bot_id", bot_id)
+
 	const result = await query.notionAccessToken.insert({
 		id: v4(),
 		user_id: user.id,
@@ -156,14 +162,7 @@ const AuthorizePage: React.FC<AuthorizePageProps> = props => {
 				{props.type === "success" ? (
 					<>
 						<Row>
-							<img
-								src={props.token.workspace_icon}
-								style={{
-									maxWidth: "128px",
-									borderRadius: 2,
-									boxShadow: boxShadow.border,
-								}}
-							/>
+							<WorkspaceIcon url={props.token.workspace_icon} />
 						</Row>
 						<Row>
 							✅ Linking {props.token.workspace_name} <Spinner />
