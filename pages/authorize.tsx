@@ -20,6 +20,8 @@ import { useRouter } from "next/router"
 import { CLIENT_RENEG_WINDOW } from "node:tls"
 import { v4 } from "uuid"
 import { WorkspaceIcon } from "../components/NotionIntegration"
+import { sendToOpener } from "../lib/popup"
+import { assert } from "node:console"
 
 type AuthorizeQueryParams = {
 	state: string | undefined
@@ -41,7 +43,7 @@ type AuthorizePageProps =
 			token: UserNotionAccessToken
 	  }
 
-async function createAndPersistToken(args: {
+async function upsertToken(args: {
 	redirect_uri: string
 	code: string
 	user: User
@@ -57,9 +59,13 @@ async function createAndPersistToken(args: {
 	const existing = await query.notionAccessToken
 		.select("*")
 		.eq("bot_id", bot_id)
+		.eq("user_id", user.id)
+	assertQueryOk(existing)
 
-	const result = await query.notionAccessToken.insert({
-		id: v4(),
+	const existingId = existing.body[0]?.id
+
+	const result = await query.notionAccessToken.upsert({
+		id: existingId || v4(),
 		user_id: user.id,
 		access_token,
 		bot_id,
@@ -98,7 +104,7 @@ export const getServerSideProps: GetServerSideProps<AuthorizePageProps> = async 
 	const code = context.query.code
 	if (typeof code === "string") {
 		try {
-			const token = await createAndPersistToken({
+			const token = await upsertToken({
 				code,
 				redirect_uri,
 				user,
@@ -130,14 +136,14 @@ export const getServerSideProps: GetServerSideProps<AuthorizePageProps> = async 
 }
 
 const AuthorizePage: React.FC<AuthorizePageProps> = props => {
-	const close = useCallback(() => {
-		const opener = window.opener as Window | undefined
-		if (opener) {
-			opener.postMessage("authorized", window.location.origin)
-		}
-		window.close()
-	}, [])
 	const router = useRouter()
+	const close = useCallback(() => {
+		if (sendToOpener({ type: "authorized" })) {
+			window.close()
+		} else {
+			router.push(routes.connections())
+		}
+	}, [router])
 	useEffect(() => {
 		if (props.type === "success") {
 			const timeout = setTimeout(() => close(), 1500)
@@ -162,7 +168,7 @@ const AuthorizePage: React.FC<AuthorizePageProps> = props => {
 				{props.type === "success" ? (
 					<>
 						<Row>
-							<WorkspaceIcon url={props.token.workspace_icon} />
+							<WorkspaceIcon size={128} url={props.token.workspace_icon} />
 						</Row>
 						<Row>
 							✅ Linking {props.token.workspace_name} <Spinner />
