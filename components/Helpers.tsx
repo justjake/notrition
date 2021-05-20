@@ -132,7 +132,7 @@ export function useNotionApiClient() {
 	const apiKey = useCurrentUserProfile()?.profile?.notion_api_key
 	return useMemo(() => {
 		if (apiKey) {
-			return NotionApiClient.create(apiKey)
+			return NotionApiClient.withServerApiToken(apiKey)
 		}
 	}, [apiKey])
 }

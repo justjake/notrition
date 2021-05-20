@@ -1,4 +1,6 @@
 import fetch, { Response } from "node-fetch"
+import { AccessRequest, AccessResponse } from "../pages/api/notion"
+import { UserNotionAccessToken } from "./models"
 import { routes } from "./routes"
 import { die } from "./utils"
 
@@ -11,7 +13,6 @@ const NOTION_OAUTH_CLIENT_SECRET = process.env.NOTION_OAUTH_CLIENT_SECRET
 export const OAUTH_REDIRECT_URI = "http://localhost:3000/authorize"
 
 export interface NotionApiRequest {
-	notionApiToken: string
 	method: string
 	path: string
 	headers?: { [key: string]: string }
@@ -28,22 +29,6 @@ export function parseNotionJson(json: any): any {
 	return json
 }
 
-export async function notionApiRequest(args: NotionApiRequest) {
-	return typeof (global as any)["window"] !== "undefined"
-		? fetch("/api/notionApiProxy", {
-				// On the browser, we have to use the proxy :'(
-				method: "post",
-				body: JSON.stringify(args),
-		  })
-		: fetch(`${NOTION_API_BASE_URL}${args.path}`, {
-				method: args.method,
-				body: args.body ? JSON.stringify(args.body) : undefined,
-				headers: {
-					Authorization: `Bearer ${args.notionApiToken}`,
-					...args.headers,
-				},
-		  })
-}
 export interface NotionObject<ObjectType extends string> {
 	object: ObjectType
 	[key: string]: unknown
@@ -215,11 +200,53 @@ export interface NotionOauthToken {
 	bot_id: string
 }
 
-export class NotionApiClient {
-	constructor(public apiKey: string) {}
+async function performProxiedRequest(args: AccessRequest) {
+	const res = await fetch("/api/notion", {
+		method: "post",
+		body: JSON.stringify(args),
+	})
+	return new NotionApiResponse(res)
+}
 
-	static create(apiKey: string) {
-		return new this(apiKey)
+async function performServerSideRequest(args: {
+	notionApiToken: string
+	request: NotionApiRequest
+}) {
+	const { notionApiToken, request } = args
+	const res = await fetch(`${NOTION_API_BASE_URL}${request.path}`, {
+		method: request.method,
+		body: request.body ? JSON.stringify(request.body) : undefined,
+		headers: {
+			Authorization: `Bearer ${notionApiToken}`,
+			...request.headers,
+		},
+	})
+	return new NotionApiResponse(res)
+}
+
+interface PerformNotionRequestFn {
+	(request: NotionApiRequest): Promise<NotionApiResponse>
+}
+
+export class NotionApiClient {
+	constructor(public performRequest: PerformNotionRequestFn) {}
+
+	static withServerApiToken(notionApiToken: string) {
+		return new this(request => {
+			return performServerSideRequest({
+				notionApiToken,
+				request,
+			})
+		})
+	}
+
+	static withBrowserToken(token: UserNotionAccessToken) {
+		return new this(request => {
+			return performProxiedRequest({
+				notionAccessTokenId: token.id,
+				notionApiRequest: request,
+			})
+		})
 	}
 
 	static getOathUrl(): string {
@@ -274,17 +301,8 @@ export class NotionApiClient {
 		})
 	}
 
-	async req(args: Omit<NotionApiRequest, "notionApiToken">) {
-		const httpResponse = await notionApiRequest({
-			...args,
-			notionApiToken: this.apiKey,
-		})
-
-		return new NotionApiResponse(httpResponse)
-	}
-
 	async getPage(pageId: string): Promise<NotionPage> {
-		const res = await this.req({
+		const res = await this.performRequest({
 			method: "GET",
 			path: `/pages/${pageId}`,
 		})
@@ -293,7 +311,7 @@ export class NotionApiClient {
 	}
 
 	async getChildren(blockId: string) {
-		const res = await this.req({
+		const res = await this.performRequest({
 			method: "GET",
 			path: `/blocks/${blockId}/children`,
 		})
@@ -302,7 +320,7 @@ export class NotionApiClient {
 	}
 
 	async getDatabases(): Promise<NotionList<NotionDatabase>> {
-		const res = await this.req({
+		const res = await this.performRequest({
 			method: "get",
 			path: "/databases",
 		})
@@ -320,7 +338,7 @@ export class NotionApiClient {
 	): Promise<NotionList<NotionPage>> {
 		const { sorts } = options
 
-		const res = await this.req({
+		const res = await this.performRequest({
 			method: "POST",
 			path: `/databases/${databaseId}/query`,
 			body: options,
