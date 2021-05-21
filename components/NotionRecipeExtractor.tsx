@@ -13,7 +13,16 @@ import {
 	NotionApiClient,
 } from "../lib/notion"
 import { query } from "../lib/supabase"
-import { Box, Button, JSONViewer, Row, useCurrentUserProfile } from "./Helpers"
+import {
+	Box,
+	Button,
+	JSONViewer,
+	PleaseConnectAWorkspace,
+	PleaseLogIn,
+	Row,
+	TextLink,
+	useCurrentUserProfile,
+} from "./Helpers"
 import fetch from "node-fetch"
 import Link from "next/link"
 import {
@@ -200,10 +209,7 @@ export function CreateNotionRecipePage(props: {}) {
 	if (!profile) {
 		return (
 			<Row>
-				No user found.{" "}
-				<Link href={routes.login()}>
-					<a>Log in</a>
-				</Link>
+				<PleaseLogIn />
 			</Row>
 		)
 	}
@@ -211,11 +217,7 @@ export function CreateNotionRecipePage(props: {}) {
 	if (!tokens.length) {
 		return (
 			<Row>
-				Please{" "}
-				<Link href={routes.connections()}>
-					<a>connect a workspace</a>
-				</Link>
-				.
+				<PleaseConnectAWorkspace />
 			</Row>
 		)
 	}
@@ -249,10 +251,18 @@ export function CreateNotionRecipePage(props: {}) {
 					</p>
 					<div>Requirements:</div>
 					<ul>
-						<li>Your recipe has a "Ingredients" heading</li>
 						<li>
-							Your ingredients are a bulleted list or checkbox list following
-							the "Ingredients" heading.
+							You've{" "}
+							<TextLink href={routes.connections()}>
+								connected Notrition to the workspace
+							</TextLink>{" "}
+							containing the page, and then given the Notrition bot access
+							inside Notion.
+						</li>
+						<li>Your recipe has a "Ingredients" heading.</li>
+						<li>
+							Your ingredients are a bulleted list or to-do list following the
+							"Ingredients" heading.
 						</li>
 					</ul>
 				</Row>

@@ -260,10 +260,37 @@ export function PleaseConnectAWorkspace(props: {}) {
 	return (
 		<>
 			Please{" "}
-			<Link href={routes.connections()}>
+			<TextLink href={routes.connections()}>
 				<a>connect a workspace</a>
-			</Link>
+			</TextLink>
 			.
+		</>
+	)
+}
+
+export function PleaseLogIn() {
+	return (
+		<>
+			No user foind.{" "}
+			<TextLink href={routes.login()}>
+				<a>Log in</a>
+			</TextLink>
+		</>
+	)
+}
+
+export function TextLink(props: { href: string; children: React.ReactNode }) {
+	return (
+		<>
+			<Link href={props.href}>
+				<a>{props.children}</a>
+			</Link>
+			<style jsx>{`
+				a {
+					text-decoration-color: ${colors.primaryBlue};
+					text-decoration-line: underline;
+				}
+			`}</style>
 		</>
 	)
 }

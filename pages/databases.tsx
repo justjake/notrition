@@ -199,6 +199,14 @@ function DatabasesList(props: {}) {
 
 	const { data, isValidating } = databases
 
+	if (isValidating && !data) {
+		return (
+			<Row>
+				Loading databases <Spinner />
+			</Row>
+		)
+	}
+
 	if (!data || data.results.length === 0) {
 		return <Row>No databases</Row>
 	}
