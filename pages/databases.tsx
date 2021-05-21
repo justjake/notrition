@@ -4,10 +4,10 @@ import {
 	Box,
 	JSONViewer,
 	Row,
-	useNotionApiClient,
 	Button,
 	Spinner,
 	useCurrentUserProfile,
+	PleaseConnectAWorkspace,
 } from "../components/Helpers"
 import { NotionRecipePageView } from "../components/NotionRecipeExtractor"
 import { useNotritionRecipePage } from "../lib/swr"
@@ -20,6 +20,15 @@ import {
 import { routes } from "../lib/routes"
 import { useAsyncGeneratorState } from "../lib/useAsyncGeneratorState"
 import { upsertNotritionRecipePage } from "../lib/upsertRecipePage"
+import {
+	CurrentAccessTokenProvider,
+	useAccessTokens,
+	useCurrentAccessToken,
+	useCurrentAccessTokenId,
+	useNotionApiClient,
+} from "../components/NotionAccessTokenContext"
+import { Layout, LayoutFooter, LayoutHeader } from "../components/Layout"
+import { WorkspaceIcon } from "../components/NotionIntegration"
 
 const ErrorView: React.FC<{
 	caption: ReactNode
@@ -65,17 +74,19 @@ function DatabaseEntry(props: { database: NotionDatabase; page: NotionPage }) {
 	const [updateState, trackUpdate] = useAsyncGeneratorState(
 		upsertNotritionRecipePage
 	)
-	const notion = useNotionApiClient()
+	const accessTokenId = useCurrentAccessTokenId()
 	const profile = useCurrentUserProfile()?.profile
 
 	const handleAnalyze = async () => {
-		if (!notion || !profile || updateState.isRunning) {
+		if (!profile || updateState.isRunning) {
 			return
 		}
 
 		trackUpdate(
 			upsertNotritionRecipePage({
-				notion,
+				access: {
+					accessTokenId,
+				},
 				notionPageId: page.id,
 				profile,
 				updateNutrition: true,
@@ -131,7 +142,7 @@ function DatabaseEntry(props: { database: NotionDatabase; page: NotionPage }) {
 
 function DatabaseRow(props: { database: NotionDatabase }) {
 	const { database } = props
-	const notion = useNotionApiClient()
+	const notion = useNotionApiClient(undefined)
 
 	const pages = useSWR([notion, "databasePages"], async () => {
 		if (notion) {
@@ -175,8 +186,8 @@ function DatabaseRow(props: { database: NotionDatabase }) {
 	)
 }
 
-export default function DatabasePage(props: {}) {
-	const notion = useNotionApiClient()
+function DatabasesList(props: {}) {
+	const notion = useNotionApiClient(undefined)
 	const databases = useSWR([notion], async () => {
 		if (notion) {
 			return await notion.getDatabases()
@@ -204,5 +215,31 @@ export default function DatabasePage(props: {}) {
 				return <DatabaseRow key={database.id} database={database} />
 			})}
 		</Box>
+	)
+}
+
+export default function DatabasesPage(args: {}) {
+	const { tokens } = useAccessTokens()
+
+	const tokenViews = tokens.map(token => {
+		return (
+			<CurrentAccessTokenProvider
+				key={token.id}
+				tokenId={token.id}
+				token={token}
+			>
+				<h3>
+					<WorkspaceIcon size="inline" url={token.workspace_icon} />{" "}
+					{token.workspace_name}
+				</h3>
+				<DatabasesList />
+			</CurrentAccessTokenProvider>
+		)
+	})
+
+	return (
+		<Layout header={<LayoutHeader />} footer={<LayoutFooter />}>
+			{tokenViews.length ? tokenViews : <PleaseConnectAWorkspace />}
+		</Layout>
 	)
 }

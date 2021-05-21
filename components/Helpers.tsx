@@ -1,5 +1,6 @@
 import { User } from "@supabase/gotrue-js"
 import { Auth } from "@supabase/ui"
+import Link from "next/link"
 import { useRouter } from "next/router"
 import React, {
 	ButtonHTMLAttributes,
@@ -249,5 +250,17 @@ export function Center(props: { asRow?: boolean; children: React.ReactNode }) {
 				}
 			`}</style>
 		</div>
+	)
+}
+
+export function PleaseConnectAWorkspace(props: {}) {
+	return (
+		<>
+			Please{" "}
+			<Link href={routes.connections()}>
+				<a>connect a workspace</a>
+			</Link>
+			.
+		</>
 	)
 }

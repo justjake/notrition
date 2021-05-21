@@ -94,12 +94,16 @@ export function CurrentAccessTokenProvider(props: {
 /**
  * Contextual access token and a client that uses it to talk to Notion.
  */
-export function useCurrentAccessToken() {
-	return useContext(CurrentAccessTokenContext)
+export function useCurrentAccessTokenId() {
+	const contextId = useContext(CurrentAccessTokenContext)?.tokenId
+	if (!contextId) {
+		throw new Error("No acess token provided")
+	}
+	return contextId
 }
 
 export function useNotionApiClient(accessTokenId: string | undefined) {
-	const contextClient = useCurrentAccessToken()?.notion
+	const contextClient = useContext(CurrentAccessTokenContext)?.notion
 	if (!contextClient && !accessTokenId) {
 		throw new Error("No access token provided")
 	}

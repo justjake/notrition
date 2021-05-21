@@ -1,25 +1,30 @@
-import { NextApiHandler } from "next"
+import { User } from "@supabase/gotrue-js"
+import { NextApiHandler, NextApiResponse } from "next"
 import {
 	NotionAccessToken,
 	UserNotionAccessToken,
 	UserNotionAccessTokenColumns,
 } from "../../lib/models"
-import { assertQueryOk, mustAuthToken, query } from "../../lib/supabase"
+import {
+	assertQueryOk,
+	authCookie,
+	mustAuthToken,
+	query,
+} from "../../lib/supabase"
 
-interface ListAccessTokensResponse {
+export interface ListAccessTokensResponse {
 	tokens: UserNotionAccessToken[]
 }
 
-interface ErrorResponse {
+export interface ErrorResponse {
 	error: true
 	message: string
 }
 
-const listAccessTokens: NextApiHandler<ListAccessTokensResponse> = async (
-	req,
-	res
+const listAccessTokens = async (
+	user: User,
+	res: NextApiResponse<ListAccessTokensResponse>
 ) => {
-	const user = await mustAuthToken(req)
 	const tokens = await query.notionAccessToken
 		.select(Object.keys(UserNotionAccessTokenColumns).join(","))
 		.eq("user_id", user.id)
@@ -31,8 +36,14 @@ const listAccessTokens: NextApiHandler<ListAccessTokensResponse> = async (
 const accessTokens: NextApiHandler<
 	ListAccessTokensResponse | ErrorResponse
 > = async (req, res) => {
-	if (req.method === "get") {
-		return listAccessTokens(req, res)
+	const user = await authCookie(req)
+	if (!user) {
+		res.status(401).send({ error: true, message: `Please log in` })
+		return
+	}
+
+	if (req.method === "GET") {
+		return listAccessTokens(user, res)
 	}
 
 	res

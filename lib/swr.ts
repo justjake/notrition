@@ -20,17 +20,18 @@ export function notritionRecipePagesKey(userId: string | undefined) {
 	return ["notion_recipe_pages"]
 }
 
-export function useNotritionRecipePage(
-	userId: string | undefined,
-	notionPageId: string
-) {
-	return useSWR(notritionRecipePageKey(userId, notionPageId), async () => {
-		const result = await query.notionRecipePage
-			.select("*")
-			.eq("notion_page_id", notionPageId)
-			.single()
-		return result.body || undefined
-	})
+export function useNotritionRecipePage(notionPageId: string) {
+	const profile = useCurrentUserProfile()
+	return useSWR(
+		notritionRecipePageKey(profile?.user?.id, notionPageId),
+		async () => {
+			const result = await query.notionRecipePage
+				.select("*")
+				.eq("notion_page_id", notionPageId)
+				.single()
+			return result.body || undefined
+		}
+	)
 }
 
 export function useNotritionRecipePages() {
