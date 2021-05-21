@@ -3,6 +3,23 @@ import { useEffect } from "react"
 export type PopupTarget = "notion-oauth"
 export type PopupMessage = { type: "authorized" }
 
+interface PopupMessageEnvelope {
+	source: "notrition"
+	message: PopupMessage
+}
+
+function isPopupMessageEnvelope(data: unknown): data is PopupMessageEnvelope {
+	if (typeof data !== "object" || !data) {
+		return false
+	}
+
+	if (!("source" in data)) {
+		return false
+	}
+
+	return (data as any).source === "notrition"
+}
+
 export function openPopUp(args: { target: PopupTarget; url: string }) {
 	const { target: popupId, url } = args
 	const width = 500
@@ -27,7 +44,11 @@ export function openPopUp(args: { target: PopupTarget; url: string }) {
 export function sendToOpener(message: PopupMessage) {
 	const opener = window.opener as Window | undefined
 	if (opener) {
-		opener.postMessage("authorized", window.location.origin)
+		const envelope: PopupMessageEnvelope = {
+			message,
+			source: "notrition",
+		}
+		opener.postMessage(envelope, window.location.origin)
 		return true
 	}
 	return false
@@ -42,7 +63,14 @@ export function usePopupMessageListener(
 				return
 			}
 
-			listener(message.data)
+			const data = message.data
+			if (!isPopupMessageEnvelope(data)) {
+				return
+			}
+
+			console.log("message", data)
+
+			listener(data.message)
 		}
 		window.addEventListener("message", handleMessage)
 		return () => window.removeEventListener("message", handleMessage)

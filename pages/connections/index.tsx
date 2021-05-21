@@ -14,6 +14,7 @@ import {
 	LayoutHeader,
 	LayoutRow,
 } from "../../components/Layout"
+import { useAccessTokens } from "../../components/NotionAccessTokenContext"
 import { WorkspaceIcon } from "../../components/NotionIntegration"
 import {
 	UserNotionAccessToken,
@@ -23,32 +24,6 @@ import { NotionApiClient } from "../../lib/notion"
 import { openPopUp, usePopupMessageListener } from "../../lib/popup"
 import { routes } from "../../lib/routes"
 import { assertQueryOk, authCookie, query } from "../../lib/supabase"
-
-interface ConnectionsIndexProps {
-	accessTokens: UserNotionAccessToken[]
-}
-
-export const getServerSideProps: GetServerSideProps<ConnectionsIndexProps> = async context => {
-	const user = await authCookie(context.req)
-	if (!user) {
-		return {
-			redirect: {
-				statusCode: 302,
-				destination: routes.login(),
-			},
-		}
-	}
-
-	const accessTokens = await query.notionAccessToken
-		.select(Object.keys(UserNotionAccessTokenColumns).join(","))
-		.eq("user_id", user.id)
-		.order("inserted_at")
-	assertQueryOk(accessTokens)
-
-	return {
-		props: { accessTokens: accessTokens.body },
-	}
-}
 
 const AccessTokensList: React.FC<{
 	accessTokens: UserNotionAccessToken[]
@@ -76,12 +51,9 @@ const AccessTokenView: React.FC<{
 	)
 }
 
-const TARGET = "notion_oauth_window"
-const OAUTH_AUTHORIZED_MESSAGE = "notion_oauth_complete"
+const ConnectionsIndexPage: React.FC<{}> = props => {
+	const { tokens, swr } = useAccessTokens()
 
-const ConnectionsIndexPage: React.FC<ConnectionsIndexProps> = props => {
-	const { accessTokens } = props
-	const router = useRouter()
 	const handleConnect = useCallback(() => {
 		openPopUp({
 			target: "notion-oauth",
@@ -89,11 +61,15 @@ const ConnectionsIndexPage: React.FC<ConnectionsIndexProps> = props => {
 		})
 	}, [])
 
-	const handleAuthorized = useCallback(() => router.reload(), [router])
+	const handleAuthorized = useCallback(() => swr?.revalidate(), [swr])
 	usePopupMessageListener(handleAuthorized)
 
 	return (
-		<Layout header={<LayoutHeader />} footer={<LayoutFooter />}>
+		<Layout
+			htmlTitle="Notrition - Connections"
+			header={<LayoutHeader />}
+			footer={<LayoutFooter />}
+		>
 			<LayoutRow>
 				<h1>Connections</h1>
 				<p>
@@ -104,7 +80,7 @@ const ConnectionsIndexPage: React.FC<ConnectionsIndexProps> = props => {
 				</p>
 			</LayoutRow>
 			<LayoutRow>
-				<AccessTokensList accessTokens={accessTokens} />
+				<AccessTokensList accessTokens={tokens} />
 			</LayoutRow>
 		</Layout>
 	)

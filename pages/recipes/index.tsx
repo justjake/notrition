@@ -12,8 +12,13 @@ import {
 
 export default function RecipesPage(props: {}) {
 	return (
-		<Layout header={<LayoutHeader />} footer={<LayoutFooter />}>
+		<Layout
+			htmlTitle="Notrition - Recipes"
+			header={<LayoutHeader />}
+			footer={<LayoutFooter />}
+		>
 			<LayoutRow>
+				<h1>Recipes</h1>
 				<CreateNotionRecipePage />
 				<NotionRecipePageList />
 			</LayoutRow>

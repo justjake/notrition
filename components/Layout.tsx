@@ -5,15 +5,20 @@ import { routes } from "../lib/routes"
 import { IconLogOut } from "@supabase/ui"
 import { Box, Button, colors, Row, useCurrentUserProfile } from "./Helpers"
 import { supabase } from "../lib/supabase"
+import Head from "next/head"
 
 const SMALL = "500px"
 
 export function AuthLayout(props: {
+	htmlTitle: string
 	children: React.ReactNode
 	title: React.ReactNode
 }) {
 	return (
 		<>
+			<Head>
+				<title>{props.htmlTitle}</title>
+			</Head>
 			<div className="login-container">
 				<div className="login-box">
 					<Box
@@ -84,12 +89,16 @@ export function AuthLayout(props: {
 }
 
 export function Layout(props: {
+	htmlTitle: string
 	header?: React.ReactNode
 	footer?: React.ReactNode
 	children: React.ReactNode
 }) {
 	return (
 		<div className="page-container">
+			<Head>
+				<title>{props.htmlTitle}</title>
+			</Head>
 			{props.header}
 			<main className="main">{props.children}</main>
 			{props.footer}
@@ -166,9 +175,6 @@ export function LayoutHeader(props: { hideNav?: boolean; hideAuth?: boolean }) {
 			</Link>
 			<Link href={routes.connections()}>
 				<a className="nav-link">Connections</a>
-			</Link>
-			<Link href={routes.settings()}>
-				<a className="nav-link">Settings</a>
 			</Link>
 		</>
 	)

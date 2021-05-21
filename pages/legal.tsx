@@ -8,7 +8,11 @@ import {
 
 export default function LegalPage(props: {}) {
 	return (
-		<Layout header={<LayoutHeader />} footer={<LayoutFooter />}>
+		<Layout
+			htmlTitle="Privacy & Terms"
+			header={<LayoutHeader />}
+			footer={<LayoutFooter />}
+		>
 			<LayoutRow>
 				<h1>Terms of Use</h1>
 				<p>

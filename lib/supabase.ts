@@ -76,10 +76,10 @@ export function assertQueryOk<T>(
 
 // API-side auth by token
 // https://github.com/supabase/supabase/blob/c9ec7c151088519abe0ac6ff66313d69f3f0fa36/examples/nextjs-with-supabase-auth/pages/api/getUser.js
-export async function mustAuthToken(req: NextApiRequest) {
+export async function authTokenHeader(req: NextApiRequest) {
 	const token = req.headers.token
 	if (!token || Array.isArray(token)) {
-		throw new Error("Unauthorized")
+		return undefined
 	}
 
 	const { user, error } = await supabase.auth.api.getUser(token)
@@ -87,7 +87,7 @@ export async function mustAuthToken(req: NextApiRequest) {
 		throw error
 	}
 	if (user === null) {
-		throw new Error("No user returned")
+		return undefined
 	}
 	return user
 }

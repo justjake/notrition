@@ -8,7 +8,7 @@ import {
 import {
 	assertQueryOk,
 	authCookie,
-	mustAuthToken,
+	authTokenHeader,
 	query,
 } from "../../lib/supabase"
 
@@ -36,7 +36,7 @@ const listAccessTokens = async (
 const accessTokens: NextApiHandler<
 	ListAccessTokensResponse | ErrorResponse
 > = async (req, res) => {
-	const user = await authCookie(req)
+	const user = await authTokenHeader(req)
 	if (!user) {
 		res.status(401).send({ error: true, message: `Please log in` })
 		return

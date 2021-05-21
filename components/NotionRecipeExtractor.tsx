@@ -241,6 +241,7 @@ export function CreateNotionRecipePage(props: {}) {
 	return (
 		<Row>
 			<Box>
+				<h3>Add recipe</h3>
 				<Row>
 					<p>
 						Parse a Notion page for ingredients and prepare a nutrition facts

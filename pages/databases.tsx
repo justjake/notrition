@@ -232,10 +232,11 @@ export default function DatabasesPage(args: {}) {
 	})
 
 	return (
-		<Layout header={<LayoutHeader />} footer={<LayoutFooter />}>
-			<Head>
-				<title>Notrition - Databases</title>
-			</Head>
+		<Layout
+			htmlTitle="Notrition - Databases"
+			header={<LayoutHeader />}
+			footer={<LayoutFooter />}
+		>
 			<LayoutRow>
 				<h1>Databases</h1>
 				{tokenViews.length ? tokenViews : <PleaseConnectAWorkspace />}

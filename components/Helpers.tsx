@@ -21,11 +21,14 @@ import { useProfile } from "../lib/swr"
 
 export const colors = {
 	primaryBlue: "#57A8D7", // notion ripoff
+	primaryBlueHover: "#4ea0d0",
 	border: "rgba(0, 0, 0, 0.1)",
+	inputShadow: "rgb(87 168 215 / 16%)",
 }
 
 export const boxShadow = {
 	border: `inset 0px 0px 0px 1px ${colors.border}`,
+	input: `0 0 0 2px ${colors.inputShadow}`,
 }
 
 export const fonts = {

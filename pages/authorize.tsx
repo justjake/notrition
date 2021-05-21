@@ -156,11 +156,7 @@ const AuthorizePage: React.FC<AuthorizePageProps> = props => {
 	)
 
 	return (
-		<AuthLayout title={title}>
-			<Head>
-				<title>Notrition - {title}</title>
-			</Head>
-
+		<AuthLayout htmlTitle={`Notrition - ${title}`} title={title}>
 			<Center>
 				{props.type === "success" ? (
 					<>

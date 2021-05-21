@@ -2,6 +2,7 @@ import React, { createContext, useContext, useMemo } from "react"
 import useSWR, { SWRResponse } from "swr"
 import { UserNotionAccessToken } from "../lib/models"
 import { NotionApiClient } from "../lib/notion"
+import { notrition } from "../lib/notrition"
 import { ListAccessTokensResponse } from "../pages/api/accessTokens"
 import { useCurrentUserProfile } from "./Helpers"
 
@@ -21,7 +22,7 @@ export function AccessTokensProvider(props: { children: React.ReactNode }) {
 	const user = useCurrentUserProfile()
 	const swr = useSWR<ListAccessTokensResponse>(
 		user ? "/api/accessTokens" : null,
-		path => fetch(path).then(res => res.json())
+		() => notrition.getAccessTokens()
 	)
 
 	const value: AccessTokensContext = useMemo(() => {

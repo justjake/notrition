@@ -3,9 +3,12 @@ import Head from "next/head"
 import Link from "next/link"
 import { useRouter } from "next/router"
 import React, { useEffect, useMemo } from "react"
+import { tokenToString } from "typescript"
 import {
 	Box,
+	boxShadow,
 	Center,
+	colors,
 	Row,
 	Spinner,
 	useCurrentUserProfile,
@@ -55,8 +58,13 @@ export default function LoginPage(props: {}) {
 		}
 
 		// Once the user is populated, do a redirect.
-		const timeout = setTimeout(() => {
-			router.push(routes.default())
+		const timeout = setTimeout(async () => {
+			const { tokens } = await notrition.getAccessTokens()
+			if (!tokens || tokens.length === 0) {
+				router.push(routes.connections())
+			} else {
+				router.push(routes.recipes())
+			}
 		}, 1000)
 
 		return () => clearTimeout(timeout)
@@ -84,10 +92,37 @@ export default function LoginPage(props: {}) {
 
 	const title = getAuthViewTitle(authView)
 	return (
-		<AuthLayout title={title}>
+		<AuthLayout htmlTitle={title} title={title}>
 			<Head>
 				<title>Notrition - {title}</title>
 			</Head>
+			<style>{`
+				.sbui-btn-primary {
+					background-color: ${colors.primaryBlue};
+				}
+
+				.sbui-btn-primary:hover {
+					background-color: ${colors.primaryBlueHover};
+				}
+
+				.sbui-checkbox[type=checkbox]:checked {
+					background-color: ${colors.primaryBlue} !important;
+				}
+
+				.sbui-input:focus {
+					box-shadow: ${boxShadow.input};
+				}
+
+				.sbui-input:focus, .sbui-checkbox:hover {
+					border-color: ${colors.primaryBlue};
+				}
+
+				.sbui-typography-link {
+					color: black !important;
+					text-decoration-line: underline !important;
+					text-decoration-color: ${colors.primaryBlue} !important;
+				}
+			`}</style>
 			{action}
 		</AuthLayout>
 	)

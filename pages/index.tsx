@@ -32,11 +32,11 @@ function Emojis(props: {}) {
 export default function Home() {
 	const user = useCurrentUserProfile()
 	return (
-		<Layout footer={<LayoutFooter />} header={<LayoutHeader hideNav={!user} />}>
-			<Head>
-				<title>Notrition - Nutrition & Recipes for Notion</title>
-				<link rel="icon" href="/favicon.ico" />
-			</Head>
+		<Layout
+			htmlTitle="Notrition - Nutrition & Recipes for Notion"
+			footer={<LayoutFooter />}
+			header={<LayoutHeader hideNav={!user} />}
+		>
 			<Center>
 				<div style={{ padding: "5rem 0" }}>
 					<Center>
@@ -48,13 +48,12 @@ export default function Home() {
 						<p className="description">Add nutrition & recipe info to Notion</p>
 
 						{user ? (
-							<>
-								<CreateNotionRecipePage />
-								<NotionRecipePageList />
-							</>
+							<>Logged in.</>
 						) : (
 							<Link href={routes.login({ authView: "sign_up" })}>
-								<Button>Sign Up</Button>
+								<a>
+									<Button>Sign Up</Button>
+								</a>
 							</Link>
 						)}
 					</Center>
