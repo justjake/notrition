@@ -128,15 +128,6 @@ export function useCurrentUserProfile() {
 	return useContext(UserProfileContext)
 }
 
-export function useNotionApiClient() {
-	const apiKey = useCurrentUserProfile()?.profile?.notion_api_key
-	return useMemo(() => {
-		if (apiKey) {
-			return NotionApiClient.withServerApiToken(apiKey)
-		}
-	}, [apiKey])
-}
-
 export function JSONViewer(props: {
 	json?: any
 	jsonString?: string | null

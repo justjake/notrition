@@ -13,14 +13,7 @@ import {
 	NotionApiClient,
 } from "../lib/notion"
 import { query } from "../lib/supabase"
-import {
-	Box,
-	Button,
-	JSONViewer,
-	Row,
-	useCurrentUserProfile,
-	useNotionApiClient,
-} from "./Helpers"
+import { Box, Button, JSONViewer, Row, useCurrentUserProfile } from "./Helpers"
 import fetch from "node-fetch"
 import Link from "next/link"
 import {
@@ -38,6 +31,7 @@ import { routes } from "../lib/routes"
 import { useAsyncGeneratorState } from "../lib/useAsyncGeneratorState"
 import { upsertNotritionRecipePage } from "../lib/upsertRecipePage"
 import { RecipePageUpdateProgress } from "./RecipePageUpdateProgress"
+import { useAccessTokens, useNotionApiClient } from "./NotionAccessTokenContext"
 
 export function NotionRecipePageList(props: {}) {
 	const profile = useCurrentUserProfile()?.profile
@@ -72,8 +66,8 @@ export function NotionRecipePageView(props: {
 	swr: SWRResponse<any, any>
 	recipePage: NotritionRecipePage
 }) {
-	const notion = useNotionApiClient()
 	const { recipePage, profile, swr } = props
+	const notion = useNotionApiClient(recipePage.notion_access_token_id)
 	const [updateState, trackUpdate] = useAsyncGeneratorState(
 		upsertNotritionRecipePage
 	)
@@ -85,8 +79,10 @@ export function NotionRecipePageView(props: {
 
 		trackUpdate(
 			upsertNotritionRecipePage({
-				notion,
 				notionPageId: recipePage.notion_page_id,
+				access: {
+					accessTokenId: recipePage.notion_access_token_id,
+				},
 				profile,
 				cachedPage: recipePage,
 				updateNutrition: true,
@@ -194,7 +190,7 @@ export function NotionRecipePageView(props: {
 
 export function CreateNotionRecipePage(props: {}) {
 	const profile = useCurrentUserProfile()?.profile
-	const notion = useNotionApiClient()
+	const { tokens } = useAccessTokens()
 	const [rawPageId, setNotionPageId] = useState("")
 	const notionPageId = parsePageId(rawPageId)
 	const [saveState, trackSaveState] = useAsyncGeneratorState(
@@ -202,21 +198,38 @@ export function CreateNotionRecipePage(props: {}) {
 	)
 
 	if (!profile) {
-		return <Row>No user found. Log in?</Row>
+		return (
+			<Row>
+				No user found.{" "}
+				<Link href={routes.login()}>
+					<a>Log in</a>
+				</Link>
+			</Row>
+		)
 	}
 
-	if (!notion) {
-		return <Row>Please save a Notion API key.</Row>
+	if (!tokens.length) {
+		return (
+			<Row>
+				Please{" "}
+				<Link href={routes.connections()}>
+					<a>connect a workspace</a>
+				</Link>
+				.
+			</Row>
+		)
 	}
 
 	const handleSave = async () => {
-		if (saveState.isRunning || !notion) {
+		if (saveState.isRunning) {
 			return
 		}
 		trackSaveState(
 			upsertNotritionRecipePage({
-				notion,
 				notionPageId: notionPageId,
+				access: {
+					possibleAccessTokenIds: tokens.map(({ id }) => id),
+				},
 				profile,
 				updateNutrition: false,
 			})

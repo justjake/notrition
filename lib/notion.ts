@@ -228,26 +228,8 @@ interface PerformNotionRequestFn {
 	(request: NotionApiRequest): Promise<NotionApiResponse>
 }
 
-export class NotionApiClient {
+export class UniversalNotionApiClient {
 	constructor(public performRequest: PerformNotionRequestFn) {}
-
-	static withServerApiToken(notionApiToken: string) {
-		return new this(request => {
-			return performServerSideRequest({
-				notionApiToken,
-				request,
-			})
-		})
-	}
-
-	static withBrowserToken(token: UserNotionAccessToken) {
-		return new this(request => {
-			return performProxiedRequest({
-				notionAccessTokenId: token.id,
-				notionApiRequest: request,
-			})
-		})
-	}
 
 	static getOathUrl(): string {
 		const url = new URL(`${NOTION_API_BASE_URL}/oauth/authorize`)
@@ -345,6 +327,33 @@ export class NotionApiClient {
 		})
 
 		return res.asListOf("page")
+	}
+}
+
+export class NotionApiClient extends UniversalNotionApiClient {
+	static withServerApiToken(notionApiToken: string) {
+		return new UniversalNotionApiClient(request => {
+			return performServerSideRequest({
+				notionApiToken,
+				request,
+			})
+		})
+	}
+
+	static withBrowserToken(token: { id: string }) {
+		return new this(token)
+	}
+
+	public accessTokenId: string
+
+	constructor(accessToken: { id: string }) {
+		super(request =>
+			performProxiedRequest({
+				notionAccessTokenId: accessToken.id,
+				notionApiRequest: request,
+			})
+		)
+		this.accessTokenId = accessToken.id
 	}
 }
 

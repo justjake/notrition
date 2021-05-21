@@ -28,7 +28,7 @@ export interface NotritionRecipePage {
 	recipe_data: JsonOf<RecipeData> | null
 	extra_data: JSONB | null
 	public_id: UUID
-	notion_access_token_id: UUID | null
+	notion_access_token_id: UUID
 }
 
 export interface NotionPageData {
