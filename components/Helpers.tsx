@@ -1,29 +1,38 @@
 import { User } from "@supabase/gotrue-js"
 import { Auth } from "@supabase/ui"
-import {
+import Link from "next/link"
+import { useRouter } from "next/router"
+import React, {
 	ButtonHTMLAttributes,
 	createContext,
 	CSSProperties,
 	ReactNode,
 	useContext,
+	useEffect,
 	useMemo,
 } from "react"
 import { SWRResponse } from "swr"
 import { Profile } from "../lib/models"
 import { NotionApiClient } from "../lib/notion"
+import { notrition } from "../lib/notrition"
+import { routes } from "../lib/routes"
+import { supabase } from "../lib/supabase"
 import { useProfile } from "../lib/swr"
 
+export const colors = {
+	primaryBlue: "#57A8D7", // notion ripoff
+	primaryBlueHover: "#4ea0d0",
+	border: "rgba(0, 0, 0, 0.1)",
+	inputShadow: "rgb(87 168 215 / 16%)",
+}
+
 export const boxShadow = {
-	border: `inset 0px 0px 0px 1px rgba(0, 0, 0, 0.1)`,
+	border: `inset 0px 0px 0px 1px ${colors.border}`,
+	input: `0 0 0 2px ${colors.inputShadow}`,
 }
 
 export const fonts = {
 	default: `-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif`,
-}
-
-export const colors = {
-	// Notion ripoff colors:
-	primaryBlue: "#57A8D7",
 }
 
 export function Row(props: {
@@ -82,6 +91,27 @@ export interface CurrentUserProfile {
 export function UserProfileProvider(props: { children: ReactNode }) {
 	const { user } = Auth.useUser()
 	const dbProfile = useProfile(user?.id)
+	const router = useRouter()
+
+	useEffect(() => {
+		const { data: authListener } = supabase.auth.onAuthStateChange(
+			(event, session) => {
+				if (event === "PASSWORD_RECOVERY") {
+					router.push(
+						routes.login({
+							authView: "forgotten_password",
+						})
+					)
+				}
+
+				notrition.auth(event, session)
+			}
+		)
+
+		return () => {
+			authListener?.unsubscribe()
+		}
+	}, [router])
 
 	const value: CurrentUserProfile | undefined = user
 		? {
@@ -100,15 +130,6 @@ export function UserProfileProvider(props: { children: ReactNode }) {
 
 export function useCurrentUserProfile() {
 	return useContext(UserProfileContext)
-}
-
-export function useNotionApiClient() {
-	const apiKey = useCurrentUserProfile()?.profile?.notion_api_key
-	return useMemo(() => {
-		if (apiKey) {
-			return NotionApiClient.create(apiKey)
-		}
-	}, [apiKey])
 }
 
 export function JSONViewer(props: {
@@ -214,6 +235,35 @@ export function Spinner(props: {}) {
 					}
 				}
 			`}</style>
+		</>
+	)
+}
+
+export function Center(props: { asRow?: boolean; children: React.ReactNode }) {
+	return (
+		<div className="center">
+			{props.children}
+			<style jsx>{`
+				.center {
+					flex: 1;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					flex-direction: ${props.asRow ? "row" : "column"};
+				}
+			`}</style>
+		</div>
+	)
+}
+
+export function PleaseConnectAWorkspace(props: {}) {
+	return (
+		<>
+			Please{" "}
+			<Link href={routes.connections()}>
+				<a>connect a workspace</a>
+			</Link>
+			.
 		</>
 	)
 }

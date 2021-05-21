@@ -12,9 +12,39 @@ import {
 	getIngredientsFromBlocks,
 	getPageTitle,
 	NotionApiClient,
+	UniversalNotionApiClient,
 } from "./notion"
 import { query } from "./supabase"
 import { notritionRecipePageKey, notritionRecipePagesKey } from "./swr"
+
+type NotionAccessOption =
+	| { type: "accessTokenId"; accessTokenId: string }
+	| { type: "tryEach"; accessTokenIds: string[] }
+
+async function tryEachAccessTokenForPageData(args: {
+	accessTokenIds: string[]
+	notionPageId: string
+}) {
+	const { accessTokenIds, notionPageId } = args
+	for (const accessTokenId of accessTokenIds) {
+		const notion = NotionApiClient.withBrowserToken({ id: accessTokenId })
+		try {
+			console.log("try", notion.accessTokenId)
+			const result = await getNotionPageData({
+				notionPageId,
+				notion,
+			})
+
+			return {
+				pageData: result,
+				accessTokenId,
+			}
+		} catch (error) {
+			console.error("error with token", error)
+		}
+	}
+	return undefined
+}
 
 async function getNotionPageData(args: {
 	notionPageId: string
@@ -51,17 +81,19 @@ export interface RecipeUpdateState {
 }
 
 export async function* upsertNotritionRecipePage(args: {
-	notion: NotionApiClient
 	profile: Profile
 	notionPageId: string
 	updateNutrition: boolean
+	access:
+		| { accessTokenId: string; possibleAccessTokenIds?: undefined }
+		| { possibleAccessTokenIds: string[]; accessTokenId?: undefined }
 	cachedPage?: NotritionRecipePage
 }): AsyncIterableIterator<RecipeUpdateState> {
-	const { notion, profile, notionPageId } = args
-	const revalidate = () => {
+	const { profile, notionPageId, access } = args
+	const revalidate = (accessTokenId: string) => {
 		const keys = [
-			notritionRecipePageKey(notion, notionPageId),
-			notritionRecipePagesKey(notion),
+			notritionRecipePageKey(accessTokenId, notionPageId),
+			notritionRecipePagesKey(accessTokenId),
 		]
 
 		for (const key of keys) {
@@ -89,10 +121,29 @@ export async function* upsertNotritionRecipePage(args: {
 		}
 	}
 
-	const pageData = await getNotionPageData({
-		notion,
-		notionPageId,
-	})
+	yield {
+		...state,
+		phase: "fetch_notion",
+	}
+	let accessTokenId = cachedPage?.notion_access_token_id ?? access.accessTokenId
+	let pageData: NotionPageData
+	if (accessTokenId) {
+		pageData = await getNotionPageData({
+			notionPageId,
+			notion: NotionApiClient.withBrowserToken({ id: accessTokenId }),
+		})
+	} else {
+		const result = await tryEachAccessTokenForPageData({
+			accessTokenIds: access.possibleAccessTokenIds || [],
+			notionPageId,
+		})
+		if (!result) {
+			throw new Error("No access token could find that page")
+		}
+		pageData = result.pageData
+		accessTokenId = result.accessTokenId
+		console.log("got it", pageData)
+	}
 
 	if (!cachedPage) {
 		yield {
@@ -104,6 +155,7 @@ export async function* upsertNotritionRecipePage(args: {
 		cachedPage = {
 			user_id: profile.id,
 			notion_page_id: notionPageId,
+			notion_access_token_id: accessTokenId,
 			notion_data: safeJson.stringify(pageData),
 			public_id: v4(),
 			extra_data: null,
@@ -116,7 +168,7 @@ export async function* upsertNotritionRecipePage(args: {
 		}
 		state.recipePage = cachedPage
 		state.created = true
-		revalidate()
+		revalidate(accessTokenId)
 	} else {
 		// Only update if Notion data changed.
 		const pageDataJson = safeJson.stringify(pageData)
@@ -138,7 +190,7 @@ export async function* upsertNotritionRecipePage(args: {
 				.eq("notion_page_id", notionPageId)
 			state.updatedNotion = true
 			state.recipePage = cachedPage
-			revalidate()
+			revalidate(accessTokenId)
 		}
 	}
 
@@ -205,7 +257,7 @@ export async function* upsertNotritionRecipePage(args: {
 	}
 	state.recipePage = cachedPage
 	state.updatedNutrition = true
-	revalidate()
+	revalidate(accessTokenId)
 
 	yield {
 		...state,

@@ -1,10 +1,11 @@
-import { createClient } from "@supabase/supabase-js"
-import { NotritionRecipePage, Profile } from "./models"
+import { createClient, SupabaseClient } from "@supabase/supabase-js"
+import { NotionAccessToken, NotritionRecipePage, Profile } from "./models"
 import {
 	PostgrestResponse,
 	PostgrestSingleResponse,
 } from "@supabase/postgrest-js/dist/main/lib/types"
 import { die } from "./utils"
+import { NextApiRequest, NextApiResponse } from "next"
 
 export const SUPABASE_URL: string =
 	process.env.NEXT_PUBLIC_SUPABASE_URL ||
@@ -29,6 +30,10 @@ export const query = {
 
 	get profile() {
 		return supabase.from<Profile>("profiles")
+	},
+
+	get notionAccessToken() {
+		return supabase.from<NotionAccessToken>("notion_access_token")
 	},
 }
 
@@ -67,4 +72,54 @@ export function assertQueryOk<T>(
 		error.name = "PostgrestQueryErrorResponse"
 		throw error
 	}
+}
+
+// API-side auth by token
+// https://github.com/supabase/supabase/blob/c9ec7c151088519abe0ac6ff66313d69f3f0fa36/examples/nextjs-with-supabase-auth/pages/api/getUser.js
+export async function authTokenHeader(req: NextApiRequest) {
+	const token = req.headers.token
+	if (!token || Array.isArray(token)) {
+		return undefined
+	}
+
+	const { user, error } = await supabase.auth.api.getUser(token)
+	if (error) {
+		throw error
+	}
+	if (user === null) {
+		return undefined
+	}
+	return user
+}
+
+// SSR-side auth by cookie.
+// Requires user posted /api/auth to connect the session.
+// https://github.com/supabase/supabase/blob/c9ec7c151088519abe0ac6ff66313d69f3f0fa36/examples/nextjs-with-supabase-auth/pages/profile.js#L32
+export async function authCookie(req: any) {
+	const { user } = await supabase.auth.api.getUserByCookie(req)
+	return user
+}
+
+export type SupabaseAuthViewType =
+	| "sign_in"
+	| "sign_up"
+	| "forgotten_password"
+	| "magic_link"
+
+export function getAuthViewType(
+	string: string | string[] | undefined
+): SupabaseAuthViewType | undefined {
+	if (Array.isArray(string)) {
+		string = string[0]
+	}
+
+	if (
+		string === "sign_in" ||
+		string === "sign_up" ||
+		string === "forgotten_password" ||
+		string === "magic_link"
+	) {
+		return string
+	}
+	return undefined
 }

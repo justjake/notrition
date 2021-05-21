@@ -1,39 +1,52 @@
 import useSWR from "swr"
 import { query } from "../lib/supabase"
-import { useNotionApiClient } from "../components/Helpers"
 import { NotionApiClient } from "../lib/notion"
+import { useCurrentUserProfile } from "../components/Helpers"
 
 export function notritionRecipePageKey(
-	notion: NotionApiClient | undefined,
+	userId: string | undefined,
 	notionPageId: string
 ) {
-	return [notion?.apiKey, "notion_recipe_page", notionPageId]
+	if (!userId) {
+		return null
+	}
+	return ["notion_recipe_page", notionPageId]
 }
 
-export function notritionRecipePagesKey(notion: NotionApiClient | undefined) {
-	return [notion?.apiKey, "notion_recipe_page"]
+export function notritionRecipePagesKey(userId: string | undefined) {
+	if (!userId) {
+		return null
+	}
+	return ["notion_recipe_pages"]
 }
 
 export function useNotritionRecipePage(notionPageId: string) {
-	const notion = useNotionApiClient()
-	return useSWR(notritionRecipePageKey(notion, notionPageId), async () => {
-		const result = await query.notionRecipePage
-			.select("*")
-			.eq("notion_page_id", notionPageId)
-			.single()
-		return result.body || undefined
-	})
+	const profile = useCurrentUserProfile()
+	return useSWR(
+		notritionRecipePageKey(profile?.user?.id, notionPageId),
+		async () => {
+			const result = await query.notionRecipePage
+				.select("*")
+				.eq("notion_page_id", notionPageId)
+				.limit(1)
+			return result.body?.[0] || undefined
+		}
+	)
 }
 
 export function useNotritionRecipePages() {
-	const notion = useNotionApiClient()
-	return useSWR(notritionRecipePagesKey(notion), async () => {
+	const profile = useCurrentUserProfile()
+	return useSWR(notritionRecipePagesKey(profile?.user.id), async () => {
 		const result = await query.notionRecipePage.select("*")
 		return result.body || undefined
 	})
 }
 
 export function userProfileKey(userId: string | undefined) {
+	if (!userId) {
+		return null
+	}
+
 	return ["profile", userId]
 }
 
