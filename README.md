@@ -1,12 +1,16 @@
 # Notrition
 
-This is a one-day internal Notion hackathon project built by Vicky Zhang and
-Jake Teton-Landis. The code is GPLv3 liscenced.
+Notrition uses the newly-released [Notion public
+API](https://developers.notion.com) to pull recipe data from your recipes stored
+in Notion and produce nutrition labels thanks to the Edamam API. It connects to
+Notion using [OAuth](https://developers.notion.com/docs/authorization#authorizing-public-integrations).
 
-Notrition uses the upcoming Notion public API (which is in private beta and
-under heavy development) to pull recipe data from your recipes stored in Notion
-and produce nutrition labels thanks to the Edamam API. Unfornately, Notion's OAuth
-features aren't ready yet, so you'll need to bring your own Notion API bot token.
+This project started as a one-day internal Notion hackathon project built by
+Vicky Zhang and Jake Teton-Landis. The code is GPLv3.
+
+## Demo
+
+The live version of this app is running at [notrition.info](https://www.notrition.info).
 
 ## Requirements
 
@@ -14,6 +18,7 @@ You will need:
 
 1. A Supabase instance. Notrition uses Supabase for authentication and persistence.
 1. A Edamam API key. Notrition uses Edamam's nutrition analysis endpoints.
+1. A Notion OAuth Integration, created at https://www.notion.so/my-integrations
 
 Then, put together a .env.local file like this:
 
@@ -24,6 +29,8 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=YYYYYY
 SECRET_SUPABASE_SERVICE_KEY=ZZZZZ
 EDAMAM_APP_ID=AAAAAA
 EDAMAM_API_TOKEN=BBBBBB
+NEXT_PUBLIC_NOTION_OAUTH_CLIENT_ID=QQQQQQQQQQ
+NOTION_OAUTH_CLIENT_SECRET=secret_JJJJJJ
 ```
 
 ## Development
