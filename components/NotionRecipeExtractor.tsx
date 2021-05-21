@@ -231,7 +231,7 @@ export function CreateNotionRecipePage(props: {}) {
 					possibleAccessTokenIds: tokens.map(({ id }) => id),
 				},
 				profile,
-				updateNutrition: false,
+				updateNutrition: true,
 			})
 		)
 	}

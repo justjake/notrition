@@ -23,12 +23,17 @@ import { upsertNotritionRecipePage } from "../lib/upsertRecipePage"
 import {
 	CurrentAccessTokenProvider,
 	useAccessTokens,
-	useCurrentAccessToken,
 	useCurrentAccessTokenId,
 	useNotionApiClient,
 } from "../components/NotionAccessTokenContext"
-import { Layout, LayoutFooter, LayoutHeader } from "../components/Layout"
+import {
+	Layout,
+	LayoutFooter,
+	LayoutHeader,
+	LayoutRow,
+} from "../components/Layout"
 import { WorkspaceIcon } from "../components/NotionIntegration"
+import Head from "next/head"
 
 const ErrorView: React.FC<{
 	caption: ReactNode
@@ -125,17 +130,6 @@ function DatabaseEntry(props: { database: NotionDatabase; page: NotionPage }) {
 					</Button>
 				</div>
 			</TableRow>
-			{profile && recipePage.data && (
-				<TableRow height="30vh">
-					<div style={{ lineHeight: "1.5em" }}>
-						<NotionRecipePageView
-							profile={profile}
-							recipePage={recipePage.data}
-							swr={recipePage}
-						/>
-					</div>
-				</TableRow>
-			)}
 		</>
 	)
 }
@@ -239,7 +233,13 @@ export default function DatabasesPage(args: {}) {
 
 	return (
 		<Layout header={<LayoutHeader />} footer={<LayoutFooter />}>
-			{tokenViews.length ? tokenViews : <PleaseConnectAWorkspace />}
+			<Head>
+				<title>Notrition - Databases</title>
+			</Head>
+			<LayoutRow>
+				<h1>Databases</h1>
+				{tokenViews.length ? tokenViews : <PleaseConnectAWorkspace />}
+			</LayoutRow>
 		</Layout>
 	)
 }

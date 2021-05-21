@@ -39,7 +39,7 @@ export default function Home() {
 			</Head>
 			<Center>
 				<div style={{ padding: "5rem 0" }}>
-					<Center column>
+					<Center>
 						<h1 className="title">
 							<Emojis />
 						</h1>

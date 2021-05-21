@@ -36,6 +36,10 @@ export const routes = {
 		return `/connections`
 	},
 
+	databases() {
+		return "/databases"
+	},
+
 	recipes() {
 		return `/recipes`
 	},

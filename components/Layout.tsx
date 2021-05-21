@@ -161,6 +161,9 @@ export function LayoutHeader(props: { hideNav?: boolean; hideAuth?: boolean }) {
 			<Link href={routes.recipes()}>
 				<a className="nav-link">Recipes</a>
 			</Link>
+			<Link href={routes.databases()}>
+				<a className="nav-link">Databases</a>
+			</Link>
 			<Link href={routes.connections()}>
 				<a className="nav-link">Connections</a>
 			</Link>

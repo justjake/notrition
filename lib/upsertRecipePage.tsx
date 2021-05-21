@@ -29,6 +29,7 @@ async function tryEachAccessTokenForPageData(args: {
 	for (const accessTokenId of accessTokenIds) {
 		const notion = NotionApiClient.withBrowserToken({ id: accessTokenId })
 		try {
+			console.log("try", notion.accessTokenId)
 			const result = await getNotionPageData({
 				notionPageId,
 				notion,
@@ -141,6 +142,7 @@ export async function* upsertNotritionRecipePage(args: {
 		}
 		pageData = result.pageData
 		accessTokenId = result.accessTokenId
+		console.log("got it", pageData)
 	}
 
 	if (!cachedPage) {

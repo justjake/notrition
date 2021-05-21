@@ -28,8 +28,8 @@ export function useNotritionRecipePage(notionPageId: string) {
 			const result = await query.notionRecipePage
 				.select("*")
 				.eq("notion_page_id", notionPageId)
-				.single()
-			return result.body || undefined
+				.limit(1)
+			return result.body?.[0] || undefined
 		}
 	)
 }
