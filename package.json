@@ -10,6 +10,7 @@
 		"prettier": "prettier --write ."
 	},
 	"dependencies": {
+		"@notionhq/client": "^0.1.5",
 		"@supabase/supabase-js": "^1.11.2",
 		"@supabase/ui": "^0.23.2",
 		"classnames": "^2.3.1",

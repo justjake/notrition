@@ -2,24 +2,32 @@
  * Perform a request usimg a user's stored OAuth access.
  */
 
-import { NextApiHandler } from "next"
+import { RequestParameters } from "@notionhq/client/build/src/Client"
 import {
-	NotionApiClient,
-	NotionApiRequest,
-	NotionApiResponse,
-} from "../../lib/notion"
+	APIResponseError,
+	HTTPResponseError,
+	isNotionClientError,
+	RequestTimeoutError,
+} from "@notionhq/client/build/src/errors"
+import { NextApiHandler } from "next"
+import { NotionApiClient, NotionApiRequest } from "../../lib/notion"
 import { assertQueryOk, authCookie, query } from "../../lib/supabase"
 
 export interface AccessRequest {
 	notionAccessTokenId: string
-	notionApiRequest: Omit<NotionApiRequest, "notionApiToken">
+	notionApiRequest: RequestParameters
 }
 
-export type ProxyErrorCode = "proxy_unauthorized" | "proxy_token_not_found"
+export type ProxyErrorCode =
+	| "proxy_unauthorized"
+	| "proxy_token_not_found"
+	| "proxy_timeout"
+	| "proxy_unknown_error"
 
 export type AccessResponse =
-	| { object: "error"; code: ProxyErrorCode; message: string }
-	| NotionApiResponse
+	| { object: "proxy_error"; code: ProxyErrorCode; message: string }
+	| { object: "error"; code: string; message: string }
+	| { object: string; [key: string]: any }
 
 const notionApiProxy: NextApiHandler<AccessResponse> = async (req, res) => {
 	const user = await authCookie(req)
@@ -51,10 +59,39 @@ const notionApiProxy: NextApiHandler<AccessResponse> = async (req, res) => {
 	}
 
 	const client = NotionApiClient.withServerApiToken(token)
-	const response = await client.performRequest(proxyReq.notionApiRequest)
-	res
-		.status(response.httpResponse.status)
-		.send(await response.httpResponse.json())
+	try {
+		const response = await client.request(proxyReq.notionApiRequest)
+		res.status(200).send(response as any)
+	} catch (error) {
+		if (isNotionClientError(error)) {
+			if (RequestTimeoutError.isRequestTimeoutError(error)) {
+				res.status(400).send({
+					object: "proxy_error",
+					code: error.code,
+					message: error.message,
+				})
+				return
+			}
+
+			if (
+				HTTPResponseError.isHTTPResponseError(error) ||
+				APIResponseError.isAPIResponseError(error)
+			) {
+				res.status(error.status).send({
+					object: "error",
+					code: error.code,
+					message: error.body,
+				})
+				return
+			}
+		}
+
+		res.status(500).send({
+			object: "proxy_error",
+			code: "proxy_unknown_error",
+			message: error.message,
+		})
+	}
 }
 
 export default notionApiProxy
