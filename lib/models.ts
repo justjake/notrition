@@ -1,4 +1,8 @@
-import { NotionBlock, NotionList, NotionPage } from "./notion"
+import {
+	Block,
+	Page,
+	PaginatedList,
+} from "@notionhq/client/build/src/api-types"
 import { supabase } from "./supabase"
 
 const EncodedType = Symbol("encoded type")
@@ -32,8 +36,8 @@ export interface NotritionRecipePage {
 }
 
 export interface NotionPageData {
-	page: NotionPage
-	children: NotionList<NotionBlock>
+	page: Page
+	children: PaginatedList<Block>
 }
 export interface RecipeData {
 	recipeTitle: string

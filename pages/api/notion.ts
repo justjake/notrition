@@ -3,12 +3,7 @@
  */
 
 import { RequestParameters } from "@notionhq/client/build/src/Client"
-import {
-	APIResponseError,
-	HTTPResponseError,
-	isNotionClientError,
-	RequestTimeoutError,
-} from "@notionhq/client/build/src/errors"
+import { ClientErrorCode, isNotionClientError } from "@notionhq/client"
 import { NextApiHandler } from "next"
 import { NotionApiClient, NotionApiRequest } from "../../lib/notion"
 import { assertQueryOk, authCookie, query } from "../../lib/supabase"
@@ -64,8 +59,8 @@ const notionApiProxy: NextApiHandler<AccessResponse> = async (req, res) => {
 		res.status(200).send(response as any)
 	} catch (error) {
 		if (isNotionClientError(error)) {
-			if (RequestTimeoutError.isRequestTimeoutError(error)) {
-				res.status(400).send({
+			if (error.code === ClientErrorCode.RequestTimeout) {
+				res.status(502).send({
 					object: "proxy_error",
 					code: error.code,
 					message: error.message,
@@ -73,17 +68,12 @@ const notionApiProxy: NextApiHandler<AccessResponse> = async (req, res) => {
 				return
 			}
 
-			if (
-				HTTPResponseError.isHTTPResponseError(error) ||
-				APIResponseError.isAPIResponseError(error)
-			) {
-				res.status(error.status).send({
-					object: "error",
-					code: error.code,
-					message: error.body,
-				})
-				return
-			}
+			res.status(error.status).send({
+				object: "error",
+				code: error.code,
+				message: error.body,
+			})
+			return
 		}
 
 		res.status(500).send({

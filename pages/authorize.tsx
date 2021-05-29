@@ -51,7 +51,7 @@ async function upsertToken(args: {
 		bot_id,
 		workspace_icon,
 		workspace_name,
-	} = await NotionApiClient.createToken({ redirect_uri, code })
+	} = await NotionApiClient.createOauthToken({ redirect_uri, code })
 
 	const existing = await query.notionAccessToken
 		.select("*")
