@@ -52,8 +52,9 @@ export class NotionApiClient extends NotionHQClient {
 			fetch: async (path, init) => {
 				// We need to take the request and map it back to a v1 path, etc.
 				// We just ignore the fetch options that don't make sense here.
-				const prefixURL = "https://api.notion.com/v1"
-				const withoutPrefix = path.toString().substring(prefixURL.length)
+				const withoutPrefix = path
+					.toString()
+					.substring(NOTION_API_BASE_URL.length + 1)
 				const accessRequest: AccessRequest = {
 					notionAccessTokenId: token.id,
 					notionApiRequest: {

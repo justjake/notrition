@@ -73,7 +73,10 @@ async function upsertToken(args: {
 	return result.body[0]
 }
 
-export const getServerSideProps: GetServerSideProps<AuthorizePageProps> = async context => {
+export const getServerSideProps: GetServerSideProps<
+	AuthorizePageProps,
+	AuthorizeQueryParams
+> = async context => {
 	const user = await authCookie(context.req)
 	if (!user) {
 		return {

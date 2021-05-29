@@ -34,11 +34,15 @@ const ErrorView: React.FC<{
 	error: any
 	style?: CSSProperties
 }> = props => {
+	let toString: string = ""
+	try {
+		toString = String(props.error)
+	} catch (error) {}
 	return (
 		<Box style={props.style}>
 			<Row style={{ color: "red" }}>
-				Error: {props.caption}
-				{props.error && <JSONViewer json={props.error} />}
+				Error: {props.caption} {toString}
+				{props.error && <JSONViewer error={props.error} />}
 			</Row>
 		</Box>
 	)

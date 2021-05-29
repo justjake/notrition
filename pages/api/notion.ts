@@ -71,11 +71,12 @@ const notionApiProxy: NextApiHandler<AccessResponse> = async (req, res) => {
 			res.status(error.status).send({
 				object: "error",
 				code: error.code,
-				message: error.body,
+				message: error.message,
 			})
 			return
 		}
 
+		console.error("proxy_unknown_error", error)
 		res.status(500).send({
 			object: "proxy_error",
 			code: "proxy_unknown_error",
