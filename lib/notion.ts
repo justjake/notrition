@@ -1,4 +1,3 @@
-import { AccessRequest, AccessResponse } from "../pages/api/notion"
 import { die } from "./utils"
 import { Client as NotionHQClient, LogLevel } from "@notionhq/client"
 import {
@@ -9,6 +8,9 @@ import {
 	Page,
 	RichText,
 } from "@notionhq/client/build/src/api-types"
+import { buildRequestError } from "@notionhq/client/build/src/errors"
+import { RequestParameters } from "@notionhq/client/build/src/Client"
+import { AccessRequest, AccessResponse } from "../pages/api/notion"
 
 const NOTION_API_BASE_URL = "https://api.notion.com/v1"
 const NOTION_OAUTH_CLIENT_ID =
@@ -39,37 +41,17 @@ export interface NotionOauthToken {
 }
 
 export class NotionApiClient extends NotionHQClient {
+	public readonly notionAccessTokenId: string
+
 	static withServerApiToken(notionApiToken: string) {
-		return new this({
+		return new NotionHQClient({
 			auth: notionApiToken,
 			logLevel: LogLevel.DEBUG,
 		})
 	}
 
 	static withBrowserToken(token: { id: string }) {
-		return new this({
-			logLevel: LogLevel.DEBUG,
-			fetch: async (path, init) => {
-				// We need to take the request and map it back to a v1 path, etc.
-				// We just ignore the fetch options that don't make sense here.
-				const withoutPrefix = path
-					.toString()
-					.substring(NOTION_API_BASE_URL.length + 1)
-				const accessRequest: AccessRequest = {
-					notionAccessTokenId: token.id,
-					notionApiRequest: {
-						method: init?.method ?? ("get" as any),
-						path: withoutPrefix,
-						body: JSON.parse(init?.body?.toString() || "null"),
-					},
-				}
-
-				return fetch("/api/notion", {
-					method: "post",
-					body: JSON.stringify(accessRequest),
-				})
-			},
-		})
+		return new this(token.id)
 	}
 
 	static getOauthUrl(): string {
@@ -123,14 +105,29 @@ export class NotionApiClient extends NotionHQClient {
 			json,
 		})
 	}
-}
 
-const extractTextContent = (blockContent: any): string | undefined => {
-	if (!blockContent.text) {
-		return
+	constructor(notionAccessTokenId: string) {
+		super({
+			logLevel: LogLevel.DEBUG,
+		})
+		this.notionAccessTokenId = notionAccessTokenId
 	}
-	console.log(blockContent)
-	return getPlainText(blockContent.text)
+
+	async request<T>(args: RequestParameters): Promise<T> {
+		const accessRequest: AccessRequest = {
+			notionAccessTokenId: this.notionAccessTokenId,
+			notionApiRequest: args,
+		}
+		const response = await fetch("/api/notion", {
+			method: "post",
+			body: JSON.stringify(accessRequest),
+		})
+		const text = await response.text()
+		if (!response.ok) {
+			throw buildRequestError(response, text)
+		}
+		return JSON.parse(text)
+	}
 }
 
 function getBlockText(block: Block): string | undefined {
