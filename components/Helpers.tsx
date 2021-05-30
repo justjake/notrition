@@ -260,10 +260,7 @@ export function PleaseConnectAWorkspace(props: {}) {
 	return (
 		<>
 			Please{" "}
-			<TextLink href={routes.connections()}>
-				<a>connect a workspace</a>
-			</TextLink>
-			.
+			<TextLink href={routes.connections()}>connect a workspace</TextLink>.
 		</>
 	)
 }
