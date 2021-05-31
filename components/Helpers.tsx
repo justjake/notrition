@@ -13,7 +13,6 @@ import React, {
 } from "react"
 import { SWRResponse } from "swr"
 import { Profile } from "../lib/models"
-import { NotionApiClient } from "../lib/notion"
 import { notrition } from "../lib/notrition"
 import { routes } from "../lib/routes"
 import { supabase } from "../lib/supabase"
@@ -268,10 +267,11 @@ export function PleaseConnectAWorkspace(props: {}) {
 export function PleaseLogIn() {
 	return (
 		<>
-			No user foind.{" "}
+			No user found.{" "}
 			<TextLink href={routes.login()}>
 				<a>Log in</a>
 			</TextLink>
+			.
 		</>
 	)
 }
