@@ -9,14 +9,8 @@ import {
 	useCurrentUserProfile,
 	PleaseConnectAWorkspace,
 } from "../components/Helpers"
-import { NotionRecipePageView } from "../components/NotionRecipeExtractor"
 import { useNotritionRecipePage } from "../lib/swr"
-import {
-	getPageTitle,
-	getPlainText,
-	NotionDatabase,
-	NotionPage,
-} from "../lib/notion"
+import { getPageTitle, getPlainText } from "../lib/notion"
 import { routes } from "../lib/routes"
 import { useAsyncGeneratorState } from "../lib/useAsyncGeneratorState"
 import { upsertNotritionRecipePage } from "../lib/upsertRecipePage"
@@ -33,18 +27,22 @@ import {
 	LayoutRow,
 } from "../components/Layout"
 import { WorkspaceIcon } from "../components/NotionIntegration"
-import Head from "next/head"
+import { Database, Page } from "@notionhq/client/build/src/api-types"
 
 const ErrorView: React.FC<{
 	caption: ReactNode
 	error: any
 	style?: CSSProperties
 }> = props => {
+	let toString: string = ""
+	try {
+		toString = String(props.error)
+	} catch (error) {}
 	return (
 		<Box style={props.style}>
 			<Row style={{ color: "red" }}>
-				Error: {props.caption}
-				{props.error && <JSONViewer json={props.error} />}
+				Error: {props.caption} {toString}
+				{props.error && <JSONViewer error={props.error} />}
 			</Row>
 		</Box>
 	)
@@ -73,7 +71,7 @@ function TableRow(props: { height?: string; children: ReactNode }) {
 	)
 }
 
-function DatabaseEntry(props: { database: NotionDatabase; page: NotionPage }) {
+function DatabaseEntry(props: { database: Database; page: Page }) {
 	const { database, page } = props
 	const recipePage = useNotritionRecipePage(page.id)
 	const [updateState, trackUpdate] = useAsyncGeneratorState(
@@ -134,13 +132,13 @@ function DatabaseEntry(props: { database: NotionDatabase; page: NotionPage }) {
 	)
 }
 
-function DatabaseRow(props: { database: NotionDatabase }) {
+function DatabaseRow(props: { database: Database }) {
 	const { database } = props
 	const notion = useNotionApiClient(undefined)
 
 	const pages = useSWR([notion, "databasePages"], async () => {
 		if (notion) {
-			return notion.queryDatabase(database.id)
+			return notion.databases.query({ database_id: database.id })
 		}
 	})
 
@@ -184,7 +182,7 @@ function DatabasesList(props: {}) {
 	const notion = useNotionApiClient(undefined)
 	const databases = useSWR([notion], async () => {
 		if (notion) {
-			return await notion.getDatabases()
+			return await notion.databases.list()
 		}
 	})
 

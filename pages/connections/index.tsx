@@ -57,7 +57,7 @@ const ConnectionsIndexPage: React.FC<{}> = props => {
 	const handleConnect = useCallback(() => {
 		openPopUp({
 			target: "notion-oauth",
-			url: NotionApiClient.getOathUrl(),
+			url: NotionApiClient.getOauthUrl(),
 		})
 	}, [])
 

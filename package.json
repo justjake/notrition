@@ -10,6 +10,7 @@
 		"prettier": "prettier --write ."
 	},
 	"dependencies": {
+		"@notionhq/client": "git://github.com/makenotion/notion-sdk-js.git#jake--isomorphic",
 		"@supabase/supabase-js": "^1.11.2",
 		"@supabase/ui": "^0.23.2",
 		"classnames": "^2.3.1",

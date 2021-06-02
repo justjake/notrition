@@ -12,7 +12,6 @@ import {
 	getIngredientsFromBlocks,
 	getPageTitle,
 	NotionApiClient,
-	UniversalNotionApiClient,
 } from "./notion"
 import { query } from "./supabase"
 import { notritionRecipePageKey, notritionRecipePagesKey } from "./swr"
@@ -29,7 +28,6 @@ async function tryEachAccessTokenForPageData(args: {
 	for (const accessTokenId of accessTokenIds) {
 		const notion = NotionApiClient.withBrowserToken({ id: accessTokenId })
 		try {
-			console.log("try", notion.accessTokenId)
 			const result = await getNotionPageData({
 				notionPageId,
 				notion,
@@ -51,14 +49,18 @@ async function getNotionPageData(args: {
 	notion: NotionApiClient
 }): Promise<NotionPageData> {
 	const { notionPageId: pageId, notion } = args
-	const page = await notion.getPage(pageId)
-	const children = await notion.getChildren(pageId)
+	const page = await notion.pages.retrieve({
+		page_id: pageId,
+	})
+	const children = await notion.blocks.children.list({
+		block_id: pageId,
+	})
 	return { page, children }
 }
 
 function extractRecipeData({ page, children }: NotionPageData): RecipeData {
 	const recipeTitle = getPageTitle(page)
-	const ingredients = getIngredientsFromBlocks({ children })
+	const ingredients = getIngredientsFromBlocks(children.results)
 	return {
 		recipeTitle,
 		ingredients,
